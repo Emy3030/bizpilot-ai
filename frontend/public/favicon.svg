@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="8" fill="#0E7F90"/>
+  <text
+    x="16"
+    y="23"
+    font-family="'Space Grotesk', 'Arial', sans-serif"
+    font-weight="700"
+    font-size="19"
+    fill="#FFFFFF"
+    text-anchor="middle"
+  >B</text>
+</svg>

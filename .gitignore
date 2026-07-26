@@ -1,0 +1,8 @@
+node_modules/
+.expo/
+dist/
+.env
+contracts/.env
+backend/.env
+android/app/build/
+ios/build/
