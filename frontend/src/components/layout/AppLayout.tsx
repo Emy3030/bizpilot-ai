@@ -21,6 +21,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { Button } from '@/components/ui/button';
+import { GlobalSearch } from '@/components/layout/GlobalSearch';
 import { cn } from '@/utils/cn';
 
 interface NavItem {
@@ -179,31 +180,31 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="flex h-full min-w-0 flex-1 flex-col">
-        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6 sm:py-4">
-          <div className="flex min-w-0 items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="shrink-0 lg:hidden"
-              onClick={() => setMobileNavOpen(true)}
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
-            <Link
-              to="/home"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20 lg:hidden"
-            >
-              <Rocket className="h-4 w-4" />
-            </Link>
-            <div className="min-w-0">
-              <h1 className="truncate text-base font-semibold sm:text-lg">
-                Good day, {user?.name?.split(' ')[0]} 👋
-              </h1>
-              <p className="hidden truncate text-sm text-muted-foreground sm:block">
-                Here's what's happening with your business today.
-              </p>
-            </div>
+        <header className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3 sm:px-6 sm:py-4">
+          <Button
+            variant="outline"
+            size="icon"
+            className="shrink-0 lg:hidden"
+            onClick={() => setMobileNavOpen(true)}
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
+          <Link
+            to="/home"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20 lg:hidden"
+          >
+            <Rocket className="h-4 w-4" />
+          </Link>
+
+          <div className="hidden min-w-0 shrink-0 lg:block">
+            <h1 className="font-display truncate text-base font-semibold">
+              Welcome back, {user?.name?.split(' ')[0]}
+            </h1>
+            <p className="truncate text-xs text-muted-foreground">{user?.businessName}</p>
           </div>
+
+          <GlobalSearch className="min-w-0 flex-1 lg:max-w-md" />
+
           <div className="flex shrink-0 items-center gap-2">
             <Button variant="outline" size="icon" onClick={toggleTheme}>
               {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}

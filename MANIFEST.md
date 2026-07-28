@@ -1,71 +1,41 @@
-# Customer Workflow + Quick Actions + Settings + Home — Merge Instructions
+# Header Redesign + Search + News Volume — Merge Instructions
 
-Mirrors your project root exactly. Copy `backend/` and `frontend/` from this zip into your project, overwrite when prompted, restart both dev servers.
+Mirrors your project root. Copy `backend/` and `frontend/` into your project, overwrite when prompted, restart both dev servers.
 
-## ⚠️ Important: App.tsx is a full reconstruction, not a small edit
+## Files (1 NEW, 6 OVERWRITTEN)
 
-While building this, I found that my own working copy of `App.tsx` had drifted from what your actual project has — every route since Module 3 was only ever given to you as a manual "add this route" instruction, never actually applied to my copy. Rather than risk handing you a stale file that would silently delete your Customers/Inventory/Sales/Expenses/Reports/AI Assistant/Verify routes, I rebuilt it from scratch with **every route your project should have**, old and new. The version in this zip is the complete, correct file — safe to overwrite wholesale. If you'd made any custom edits of your own to `App.tsx` since I last gave you route instructions, let me know and I'll fold those back in.
-
-## Files (6 NEW, 18 OVERWRITTEN)
-
-**New:**
-```
-frontend/src/utils/settingsSchemas.ts
-frontend/src/hooks/useSettings.ts
-frontend/src/components/home/BusinessPulseFeed.tsx
-frontend/src/components/home/CurrencyWatchCard.tsx
-frontend/src/pages/HomePage.tsx
-frontend/src/pages/SettingsPage.tsx
-```
+**New:** `frontend/src/components/layout/GlobalSearch.tsx`
 
 **Overwritten:**
 ```
-backend/src/services/sale.service.ts
-backend/src/services/auth.service.ts
-backend/src/controllers/auth.controller.ts
-backend/src/validators/sale.validator.ts
-backend/src/validators/auth.validator.ts
-backend/src/routes/auth.routes.ts
-frontend/src/types/sale.ts
-frontend/src/types/auth.ts
-frontend/src/services/authApi.ts
-frontend/src/context/AuthContext.tsx
+backend/src/services/news.service.ts
+backend/src/controllers/news.controller.ts
 frontend/src/components/layout/AppLayout.tsx
-frontend/src/components/dashboard/QuickActions.tsx
-frontend/src/components/sales/NewSaleDialog.tsx
-frontend/src/pages/CustomersPage.tsx
-frontend/src/pages/InventoryPage.tsx
-frontend/src/pages/SalesPage.tsx
-frontend/src/pages/ExpensesPage.tsx
-frontend/src/App.tsx
+frontend/src/components/home/BusinessPulseFeed.tsx
+frontend/src/components/home/CurrencyWatchCard.tsx
+frontend/src/pages/HomePage.tsx
 ```
 
-No new npm packages. No database migration needed (no schema changes — `Customer.address` already existed).
+No new npm packages, no schema changes.
 
 ---
 
-## 1. Add customer's address inline, on the Sales screen
+## 1. Professional header, no emoji
 
-Same combobox from before, now with an address field alongside phone — both only appear once you're typing a name that doesn't match an existing customer, and both get saved to the new customer record along with the sale.
+Replaced "Good day, {name} 👋 / Here's what's happening..." with a compact "Welcome back, {name}" + your business name underneath, in the same display font used for the brand wordmark. It only shows on larger screens (`lg:` and up) now — on mobile, that space is better spent on the search bar (see below), and the greeting was redundant with the page content itself anyway. Same emoji removed from the Home page's own greeting for consistency.
 
-## 2. Quick Actions now actually work
+## 2. Search bar in the header
 
-Each of the four Dashboard quick-action buttons navigates to its page and automatically opens that page's "add" dialog (via a `?new=1` URL parameter each page checks for on load, then cleans up). Click "New sale" → lands on `/sales` with the New Sale dialog already open. Same for Add customer, Add product, Log expense.
+New `GlobalSearch` component — a real input, always visible, that filters against every page in the app (Home, Dashboard, Customers, Inventory, Sales, Expenses, Reports, AI Assistant, Settings) plus the same quick actions from the Dashboard ("New sale," "Add customer," etc. — these open the destination page with its dialog already open, same `?new=1` mechanism from before). Type to filter, click a result or press Enter to jump there, Escape to clear. It's currently **navigation search only** — it does not search your actual customers/products data yet. That would need live API calls with debouncing against real records, which is a meaningfully bigger feature; happy to build it next if you want it, just flagging it's not in this delivery.
 
-## 3. Settings page — new
+## 3. "Live" status removed
 
-Reachable via the sidebar. Three sections:
-- **Business profile**: business name, your name, currency (email is shown but disabled — no verification flow built for changing it yet, flagged honestly in the UI rather than silently allowing an unverified change).
-- **Security**: change password, requires the current password to be entered correctly first.
-- **Appearance**: the same dark/light toggle from the header, surfaced here too since that's where people expect to find it.
-- **Session**: a log-out button.
+Dropped the green "Live" / gray "Sample content" badge from the news feed entirely, and the "Live" badge from Currency Watch (kept the "Updated X ago" freshness line on Currency Watch, since that's genuinely useful — swapped "Live exchange rates for {currency}" to just "Exchange rates for {currency}" in the description too).
 
-## 4. Home page — new, reachable via the logo and a new "Home" nav item
+## 4. More news stories — honest answer on the "60+" ask
 
-Split into what's real and what isn't, clearly labeled as such:
+GNews's free tier caps every single request at **10 articles maximum** — that's a hard platform limit, not something I can configure around. To get past that, the backend now fires off **7 parallel requests across different categories** (business, technology, general, world, science, health, national — deliberately skipping sports/entertainment as less relevant to a business feed) and merges, de-duplicates, and sorts the results by recency. That gets you **up to ~70 articles** before de-duplication (real-world count will usually land somewhat lower, since categories overlap).
 
-- **Today's revenue, net profit, and top seller** — real data, pulled from your existing dashboard/reports endpoints. No new backend work needed, just reused what already exists.
-- **"Business pulse"** — evergreen small-business tips, explicitly labeled "Sample content" with a note that a live news API would need to be connected to make it real. I did **not** fabricate dated news headlines or attribute them to fake sources, and deliberately **left out political content entirely** — inventing political news is a real misinformation risk I didn't think was worth taking for a placeholder feed section.
-- **"Currency watch"** — shows no numbers at all. I didn't want to make up exchange rates that could be mistaken for real data and accidentally used in actual pricing decisions. It's a clearly-labeled "not connected yet" placeholder, ready for a real FX API (exchangerate.host, Open Exchange Rates, etc.) whenever you want to wire one in.
+**The real trade-off, worth knowing:** this now costs **7 requests per page load** instead of 1. Your free daily quota of 100 requests now supports roughly **14 full page loads per day** across everyone using the app, not ~100. The 30-minute client-side cache (`staleTime`) means repeated visits within that window don't cost anything extra, so for a single person testing/demoing this today it's very unlikely to be a problem — but if this goes to multiple real users, you'd want either a paid GNews plan or a server-side cache shared across users (currently each person's browser caches independently). Didn't build that caching layer given today's timeline, but it's a clean next step if you need it.
 
-**Logo behavior**: the brand mark is now a link to `/home` in the desktop sidebar, the mobile drawer, and — new — a compact version now sits in the mobile header next to the hamburger menu, so it's visible and clickable on every screen size, not just desktop.
+The article list on the Home page now scrolls within a capped height instead of making the whole page extremely long with 60-70 image cards stacked vertically.

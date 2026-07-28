@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { DollarSign, TrendingUp, Trophy } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTransition } from '@/components/motion/PageTransition';
@@ -12,17 +13,20 @@ import { useDashboardSummary } from '@/hooks/useDashboardSummary';
 import { useReportSummary } from '@/hooks/useReports';
 import { formatCurrency } from '@/utils/formatCurrency';
 
-// This extracts ONLY the "YYYY-MM-DD" part of today's date, making it completely stable
-const STABLE_DAILY_DATE = new Date().toISOString().slice(0, 10);
-
 export default function HomePage() {
   const { user } = useAuth();
   const currency = user?.currency || 'NGN';
 
+  // Computed once on mount, not on every render — a fresh `new Date()` on
+  // every render was creating a new React Query cache key each time,
+  // causing an infinite refetch loop (this was flooding the backend and
+  // triggering the rate limiter).
+  const [todayIso] = useState(() => new Date().toISOString());
+
   const { data: dashboard, isLoading: dashboardLoading } = useDashboardSummary();
   const { data: report, isLoading: reportLoading } = useReportSummary({
     period: 'daily',
-    date: STABLE_DAILY_DATE,
+    date: todayIso,
   });
 
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });

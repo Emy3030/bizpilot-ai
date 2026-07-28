@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Newspaper, TrendingUp, Lightbulb, ShieldCheck, BadgeCheck, MoreHorizontal } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SourceAvatar } from './SourceAvatar';
 import { NewsArticleDialog } from './NewsArticleDialog';
@@ -62,7 +61,7 @@ export function BusinessPulseFeed() {
             {isLive ? 'Latest business headlines — tap any story to read more' : 'General tips for running a healthier business'}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className={isLive ? 'max-h-[1400px] space-y-4 overflow-y-auto pr-1' : 'space-y-4'}>
           {isLoading ? (
             Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-52 w-full rounded-2xl" />)
           ) : isLive ? (
@@ -109,13 +108,6 @@ export function BusinessPulseFeed() {
               </div>
             ))
           )}
-
-          <div className="flex items-center justify-between pt-1">
-            <Badge variant={isLive ? 'success' : 'secondary'}>{isLive ? 'Live' : 'Sample content'}</Badge>
-            {!isLive && (
-              <p className="text-xs text-muted-foreground">Connect a news API key to make this real-time.</p>
-            )}
-          </div>
         </CardContent>
       </Card>
 

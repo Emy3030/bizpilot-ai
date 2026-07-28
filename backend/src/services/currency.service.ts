@@ -21,7 +21,7 @@ export const currencyService = {
    */
   async getRates(targetCurrency: string): Promise<CurrencyRatesResult | null> {
     try {
-      const response = await fetch('https://open.er-api.com/v6/latest/USD');
+      const response = await fetch('https://open.er-api.com/v6/latest/USD', { signal: AbortSignal.timeout(9000) });
       if (!response.ok) return null;
 
       const data = (await response.json()) as {

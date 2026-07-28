@@ -23,7 +23,7 @@ export function CurrencyWatchCard({ currency }: { currency: string }) {
           <Coins className="h-4 w-4 text-primary" />
           Currency watch
         </CardTitle>
-        <CardDescription>Live exchange rates for {currency}</CardDescription>
+        <CardDescription>Exchange rates for {currency}</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -42,14 +42,11 @@ export function CurrencyWatchCard({ currency }: { currency: string }) {
                 </span>
               </div>
             ))}
-            <div className="flex items-center justify-between pt-1">
-              <Badge variant="success">Live</Badge>
-              {data?.fetchedAt && (
-                <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <RefreshCw className="h-3 w-3" /> Updated {formatRelativeTime(data.fetchedAt)}
-                </p>
-              )}
-            </div>
+            {data?.fetchedAt && (
+              <p className="flex items-center justify-end gap-1 pt-1 text-xs text-muted-foreground">
+                <RefreshCw className="h-3 w-3" /> Updated {formatRelativeTime(data.fetchedAt)}
+              </p>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border py-8 text-center">
