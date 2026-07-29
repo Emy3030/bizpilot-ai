@@ -15,6 +15,7 @@ const app: Application = express();
 // the frontend (a different port/origin) from loading <img> tags that point
 // at /uploads on this server. 'cross-origin' allows that while keeping
 // helmet's other protections intact.
+app.set('trust proxy', 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(
   cors({
