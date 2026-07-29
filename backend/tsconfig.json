@@ -10,7 +10,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "nodenext", 
+    "moduleResolution": "NodeNext", 
     "baseUrl": "./", 
     "paths": {
       "@/*": ["src/*"]
