@@ -8,3 +8,11 @@ export function useDashboardSummary() {
     refetchInterval: 60_000,
   });
 }
+
+export function useMissionControl() {
+  return useQuery({
+    queryKey: ['dashboard-summary', 'mission-control'],
+    queryFn: dashboardApi.getMissionControl,
+    refetchInterval: 60_000,
+  });
+}

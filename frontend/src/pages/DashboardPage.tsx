@@ -5,25 +5,29 @@ import { HeroStatCard } from '@/components/dashboard/HeroStatCard';
 import { SalesTrendChart } from '@/components/dashboard/SalesTrendChart';
 import { LowStockList } from '@/components/dashboard/LowStockList';
 import { RecentTransactions } from '@/components/dashboard/RecentTransactions';
-import { AIInsightsCard } from '@/components/dashboard/AIInsightsCard';
+import { MissionBriefing } from '@/components/dashboard/MissionBriefing';
+import { AgentActivityFeed } from '@/components/dashboard/AgentActivityFeed';
+import { CustomerRisks } from '@/components/dashboard/CustomerRisks';
 import { QuickActions } from '@/components/dashboard/QuickActions';
+import { PendingApprovals } from '@/components/ai/PendingApprovals';
 import { PageTransition } from '@/components/motion/PageTransition';
 import { FadeInSection } from '@/components/motion/FadeInSection';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
-import { useDashboardSummary } from '@/hooks/useDashboardSummary';
+import { useMissionControl } from '@/hooks/useDashboardSummary';
 import { formatCurrency } from '@/utils/formatCurrency';
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { data, isLoading, isError } = useDashboardSummary();
+  const { data, isLoading, isError } = useMissionControl();
   const currency = user?.currency || 'NGN';
 
   if (isLoading) {
     return (
       <AppLayout>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <Skeleton className="h-28 w-full rounded-2xl" />
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <Skeleton className="h-32 w-full rounded-2xl sm:col-span-2 lg:col-span-2" />
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-32 w-full rounded-2xl" />
@@ -43,7 +47,7 @@ export default function DashboardPage() {
         <Card>
           <CardContent className="flex flex-col items-center gap-2 p-12 text-center">
             <AlertTriangle className="h-8 w-8 text-destructive" />
-            <p className="font-medium">Couldn't load your dashboard</p>
+            <p className="font-medium">Couldn't load Mission Control</p>
             <p className="text-sm text-muted-foreground">
               Check that the API server is running and try refreshing the page.
             </p>
@@ -53,11 +57,15 @@ export default function DashboardPage() {
     );
   }
 
-  const { todayStats, lowStock, lowStockCount, recentTransactions, weeklyTrend } = data;
+  const { todayStats, lowStock, lowStockCount, recentTransactions, weeklyTrend, recentAgentActivity, topDebtors } = data;
 
   return (
     <AppLayout>
       <PageTransition>
+        <FadeInSection className="mb-6">
+          <MissionBriefing summary={data} currency={currency} />
+        </FadeInSection>
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div className="sm:col-span-2 lg:col-span-2">
             <HeroStatCard
@@ -105,16 +113,22 @@ export default function DashboardPage() {
             <FadeInSection delay={0.15}>
               <RecentTransactions items={recentTransactions} currency={currency} />
             </FadeInSection>
+            <FadeInSection delay={0.2}>
+              <AgentActivityFeed items={recentAgentActivity} />
+            </FadeInSection>
           </div>
           <div className="space-y-6">
             <FadeInSection delay={0.1}>
-              <AIInsightsCard summary={data} currency={currency} />
+              <PendingApprovals />
             </FadeInSection>
             <FadeInSection delay={0.15}>
               <QuickActions />
             </FadeInSection>
             <FadeInSection delay={0.2}>
               <LowStockList items={lowStock} />
+            </FadeInSection>
+            <FadeInSection delay={0.25}>
+              <CustomerRisks items={topDebtors} currency={currency} />
             </FadeInSection>
           </div>
         </div>

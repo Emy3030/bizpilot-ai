@@ -6,5 +6,6 @@ const router = Router();
 
 router.use(authenticate);
 router.get('/summary', dashboardController.summary);
+router.get('/mission-control', dashboardController.missionControl);
 
 export default router;

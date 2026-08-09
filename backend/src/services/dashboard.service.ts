@@ -1,4 +1,65 @@
 import prisma from '../config/prisma';
+import { agentActionService } from './agentAction.service';
+
+interface HealthResult {
+  score: number;
+  label: 'Strong' | 'Steady' | 'Needs attention' | 'At risk';
+}
+
+// A simple, explainable heuristic — not a model, on purpose. Starts at 100
+// and deducts for concrete negative signals already visible elsewhere on
+// the dashboard, so the score never claims to know something the owner
+// can't already verify themselves.
+function computeHealth(
+  todayNetProfit: number,
+  lowStockCount: number,
+  debtorCount: number,
+  pendingApprovalsCount: number
+): HealthResult {
+  let score = 100;
+  if (todayNetProfit < 0) score -= 20;
+  score -= Math.min(lowStockCount * 3, 15);
+  score -= Math.min(debtorCount * 2, 10);
+  if (pendingApprovalsCount > 5) score -= 10;
+  score = Math.max(0, Math.min(100, score));
+
+  const label: HealthResult['label'] =
+    score >= 80 ? 'Strong' : score >= 60 ? 'Steady' : score >= 40 ? 'Needs attention' : 'At risk';
+  return { score, label };
+}
+
+interface Priority {
+  type: 'approvals' | 'low_stock' | 'debt' | 'no_sales';
+  label: string;
+}
+
+function buildPriorities(
+  lowStockCount: number,
+  debtorCount: number,
+  pendingApprovalsCount: number,
+  salesCountToday: number
+): Priority[] {
+  const priorities: Priority[] = [];
+  if (pendingApprovalsCount > 0) {
+    priorities.push({
+      type: 'approvals',
+      label: `${pendingApprovalsCount} AI-prepared action${pendingApprovalsCount === 1 ? '' : 's'} awaiting your approval`,
+    });
+  }
+  if (lowStockCount > 0) {
+    priorities.push({ type: 'low_stock', label: `${lowStockCount} product${lowStockCount === 1 ? '' : 's'} running low on stock` });
+  }
+  if (debtorCount > 0) {
+    priorities.push({
+      type: 'debt',
+      label: `${debtorCount} customer${debtorCount === 1 ? ' has' : 's have'} an outstanding balance`,
+    });
+  }
+  if (salesCountToday === 0) {
+    priorities.push({ type: 'no_sales', label: 'No sales recorded yet today' });
+  }
+  return priorities;
+}
 
 function startOfToday(): Date {
   const d = new Date();
@@ -113,6 +174,58 @@ export const dashboardService = {
         paymentStatus: s.paymentStatus,
         createdAt: s.createdAt,
       })),
+    };
+  },
+
+  async getMissionControl(userId: string) {
+    // Proactive detection pass — the Inventory Agent queues restock
+    // proposals here (if any are newly urgent) before we read pending
+    // actions below, so a fresh risk shows up in the same page load.
+    await agentActionService.checkInventoryRisks(userId);
+
+    const [summary, pendingActions, recentActions, topDebtors] = await Promise.all([
+      this.getSummary(userId),
+      prisma.agentAction.findMany({ where: { userId, status: 'PENDING' } }),
+      prisma.agentAction.findMany({
+        where: { userId, status: { in: ['EXECUTED', 'REJECTED', 'FAILED'] } },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }),
+      prisma.customer.findMany({
+        where: { userId, outstandingDebt: { gt: 0 } },
+        orderBy: { outstandingDebt: 'desc' },
+        take: 5,
+        select: { id: true, name: true, outstandingDebt: true },
+      }),
+    ]);
+
+    const health = computeHealth(
+      summary.todayStats.netProfit,
+      summary.lowStockCount,
+      topDebtors.length,
+      pendingActions.length
+    );
+    const priorities = buildPriorities(
+      summary.lowStockCount,
+      topDebtors.length,
+      pendingActions.length,
+      summary.todayStats.salesCount
+    );
+
+    return {
+      ...summary,
+      healthScore: health.score,
+      healthLabel: health.label,
+      priorities,
+      pendingApprovalsCount: pendingActions.length,
+      recentAgentActivity: recentActions.map((a) => ({
+        id: a.id,
+        type: a.type,
+        status: a.status,
+        summary: a.summary,
+        createdAt: a.createdAt,
+      })),
+      topDebtors: topDebtors.map((d) => ({ id: d.id, name: d.name, outstandingDebt: Number(d.outstandingDebt) })),
     };
   },
 };
