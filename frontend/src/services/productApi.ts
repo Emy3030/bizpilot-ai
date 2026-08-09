@@ -1,5 +1,5 @@
 import { api } from './apiClient';
-import { Product, ProductFormInput } from '@/types/inventory';
+import { Product, ProductFormInput, InventoryInsights } from '@/types/inventory';
 import { PaginationMeta } from '@/types/customer';
 
 interface ListResponse {
@@ -45,6 +45,11 @@ export const productApi = {
 
   async getById(id: string): Promise<Product> {
     const { data } = await api.get<ItemResponse<Product>>(`/products/${id}`);
+    return data.data;
+  },
+
+  async getInsights(): Promise<InventoryInsights> {
+    const { data } = await api.get<ItemResponse<InventoryInsights>>('/products/insights');
     return data.data;
   },
 

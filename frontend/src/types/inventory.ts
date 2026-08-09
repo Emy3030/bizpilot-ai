@@ -21,6 +21,24 @@ export interface Product {
   updatedAt: string;
 }
 
+export interface InventoryInsightProduct {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+  stockQuantity: number;
+  lowStockThreshold: number;
+  unitsSold30d: number;
+  daysUntilStockout: number | null;
+  velocityChangePct: number;
+}
+
+export interface InventoryInsights {
+  fastMoving: InventoryInsightProduct[];
+  slowMoving: InventoryInsightProduct[];
+  restockRecommendations: InventoryInsightProduct[];
+  totalProducts: number;
+}
+
 export interface ProductFormInput {
   name: string;
   description?: string;

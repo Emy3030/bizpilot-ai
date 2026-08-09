@@ -14,16 +14,42 @@ export interface CustomerSaleItem {
   product: { name: string };
 }
 
+export interface CustomerSaleInvoice {
+  id: string;
+  invoiceNumber: string;
+  pdfUrl: string | null;
+  chainStatus: 'PENDING' | 'CONFIRMED' | 'FAILED';
+}
+
+export interface CustomerSaleReceipt {
+  id: string;
+  receiptNumber: string;
+  pdfUrl: string | null;
+  qrCodeUrl: string | null;
+  chainStatus: 'PENDING' | 'CONFIRMED' | 'FAILED';
+  documentHash: string;
+}
+
 export interface CustomerSale {
   id: string;
   totalAmount: string | number;
   paymentStatus: 'PAID' | 'PARTIAL' | 'UNPAID';
   createdAt: string;
   items: CustomerSaleItem[];
+  invoice: CustomerSaleInvoice | null;
+  receipt: CustomerSaleReceipt | null;
 }
+
+export type CustomerRiskLevel = 'Low' | 'Medium' | 'High';
 
 export interface CustomerDetail extends Customer {
   sales: CustomerSale[];
+  lifetimeValue: number;
+  totalOrders: number;
+  daysSinceLastPurchase: number | null;
+  riskScore: number;
+  riskLevel: CustomerRiskLevel;
+  recommendations: string[];
 }
 
 export interface CustomerInput {

@@ -15,6 +15,13 @@ export interface ReportTrendPoint {
   expenses: number;
 }
 
+export interface ReportComparison {
+  revenueChangePct: number | null;
+  netProfitChangePct: number | null;
+  previousRevenue: number;
+  previousNetProfit: number;
+}
+
 export interface ReportSummary {
   period: ReportPeriod;
   rangeStart: string;
@@ -26,4 +33,5 @@ export interface ReportSummary {
   salesCount: number;
   bestSellingProducts: BestSellingProduct[];
   trend: ReportTrendPoint[];
+  comparison: ReportComparison;
 }

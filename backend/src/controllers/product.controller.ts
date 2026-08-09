@@ -2,10 +2,15 @@ import { Request, Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { productService } from '../services/product.service';
 import { ApiError } from '../utils/ApiError';
+import { uploadBuffer } from '../config/cloudinary';
 
-function buildImageUrl(req: Request): string | null {
+async function uploadImage(req: Request): Promise<string | null> {
   if (!req.file) return null;
-  return `/uploads/products/${req.file.filename}`;
+  const { url } = await uploadBuffer(req.file.buffer, {
+    folder: 'bizpilot/products',
+    resource_type: 'image',
+  });
+  return url;
 }
 
 function parseProductBody(body: Record<string, string>) {
@@ -56,7 +61,7 @@ export const productController = {
         stockQuantity: input.stockQuantity ?? 0,
         lowStockThreshold: input.lowStockThreshold,
       },
-      buildImageUrl(req)
+      await uploadImage(req)
     );
 
     res.status(201).json({ success: true, message: 'Product added', data: product });
@@ -68,10 +73,16 @@ export const productController = {
     res.status(200).json({ success: true, data: product });
   }),
 
+  insights: asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user) throw ApiError.unauthorized();
+    const insights = await productService.getInventoryInsights(req.user.userId);
+    res.status(200).json({ success: true, data: insights });
+  }),
+
   update: asyncHandler(async (req: Request, res: Response) => {
     if (!req.user) throw ApiError.unauthorized();
     const input = parseProductBody(req.body);
-    const newImageUrl = req.file ? buildImageUrl(req) : undefined;
+    const newImageUrl = req.file ? await uploadImage(req) : undefined;
 
     const product = await productService.update(req.user.userId, req.params.id, input, newImageUrl);
     res.status(200).json({ success: true, message: 'Product updated', data: product });

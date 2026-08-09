@@ -11,6 +11,7 @@ import { FadeInSection } from '@/components/motion/FadeInSection';
 import { ReportPeriodSelector } from '@/components/reports/ReportPeriodSelector';
 import { ReportTrendChart } from '@/components/reports/ReportTrendChart';
 import { BestSellingProducts } from '@/components/reports/BestSellingProducts';
+import { ExecutiveSummary } from '@/components/reports/ExecutiveSummary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReportSummary } from '@/hooks/useReports';
 import { useAuth } from '@/context/AuthContext';
@@ -42,7 +43,7 @@ function formatRangeLabel(period: ReportPeriod, date: Date): string {
 
 function exportReportCsv(data: ReportSummary, period: ReportPeriod, rangeLabel: string, currency: string) {
   const rows: (string | number)[][] = [
-    [`BizPilot AI — ${period} report`],
+    [`BizPilot — ${period} report`],
     ['Range', rangeLabel],
     [],
     ['Metric', 'Value'],
@@ -115,6 +116,10 @@ export default function ReportsPage() {
           </div>
         ) : (
           <>
+            <FadeInSection delay={0.05} className="mb-6">
+              <ExecutiveSummary data={data} period={period} currency={currency} />
+            </FadeInSection>
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 label="Revenue"

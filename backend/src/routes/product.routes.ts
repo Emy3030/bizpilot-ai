@@ -15,6 +15,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', listProductsValidator, validate, productController.list);
+router.get('/insights', productController.insights);
 router.post('/', uploadProductImage, createProductValidator, validate, productController.create);
 router.get('/:id', productIdValidator, validate, productController.getById);
 router.put('/:id', uploadProductImage, [...productIdValidator, ...updateProductValidator], validate, productController.update);

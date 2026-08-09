@@ -33,6 +33,21 @@ function getRange(period: ReportPeriod, referenceDate: Date): { start: Date; end
   return { start: startOfDay(start), end: endOfDay(end) };
 }
 
+function getPreviousReferenceDate(period: ReportPeriod, referenceDate: Date): Date {
+  const prev = new Date(referenceDate);
+  if (period === 'daily') prev.setDate(prev.getDate() - 1);
+  if (period === 'weekly') prev.setDate(prev.getDate() - 7);
+  if (period === 'monthly') prev.setMonth(prev.getMonth() - 1);
+  return prev;
+}
+
+// null means "not a meaningful percentage" (e.g. went from 0 to something) —
+// the frontend shows "new" instead of a misleading infinite/undefined swing.
+function pctChange(current: number, previous: number): number | null {
+  if (previous === 0) return current === 0 ? 0 : null;
+  return Number((((current - previous) / previous) * 100).toFixed(1));
+}
+
 function eachDay(start: Date, end: Date): Date[] {
   const days: Date[] = [];
   const cursor = startOfDay(start);
@@ -46,8 +61,10 @@ function eachDay(start: Date, end: Date): Date[] {
 export const reportService = {
   async getSummary(userId: string, period: ReportPeriod, referenceDate: Date) {
     const { start, end } = getRange(period, referenceDate);
+    const { start: prevStart, end: prevEnd } = getRange(period, getPreviousReferenceDate(period, referenceDate));
 
-    const [salesAgg, expenseAgg, salesForTrend, expensesForTrend, bestSellersRaw] = await Promise.all([
+    const [salesAgg, expenseAgg, prevSalesAgg, prevExpenseAgg, salesForTrend, expensesForTrend, bestSellersRaw] =
+      await Promise.all([
       prisma.sale.aggregate({
         where: { userId, createdAt: { gte: start, lte: end } },
         _sum: { totalAmount: true, profit: true },
@@ -55,6 +72,14 @@ export const reportService = {
       }),
       prisma.expense.aggregate({
         where: { userId, createdAt: { gte: start, lte: end } },
+        _sum: { amount: true },
+      }),
+      prisma.sale.aggregate({
+        where: { userId, createdAt: { gte: prevStart, lte: prevEnd } },
+        _sum: { totalAmount: true, profit: true },
+      }),
+      prisma.expense.aggregate({
+        where: { userId, createdAt: { gte: prevStart, lte: prevEnd } },
         _sum: { amount: true },
       }),
       prisma.sale.findMany({
@@ -122,6 +147,12 @@ export const reportService = {
     const revenue = Number(salesAgg._sum.totalAmount || 0);
     const profit = Number(salesAgg._sum.profit || 0);
     const expenses = Number(expenseAgg._sum.amount || 0);
+    const netProfit = Number((profit - expenses).toFixed(2));
+
+    const previousRevenue = Number(prevSalesAgg._sum.totalAmount || 0);
+    const previousProfit = Number(prevSalesAgg._sum.profit || 0);
+    const previousExpenses = Number(prevExpenseAgg._sum.amount || 0);
+    const previousNetProfit = Number((previousProfit - previousExpenses).toFixed(2));
 
     return {
       period,
@@ -130,10 +161,16 @@ export const reportService = {
       revenue,
       profit,
       expenses,
-      netProfit: Number((profit - expenses).toFixed(2)),
+      netProfit,
       salesCount: salesAgg._count,
       bestSellingProducts,
       trend,
+      comparison: {
+        revenueChangePct: pctChange(revenue, previousRevenue),
+        netProfitChangePct: pctChange(netProfit, previousNetProfit),
+        previousRevenue,
+        previousNetProfit,
+      },
     };
   },
 };

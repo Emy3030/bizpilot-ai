@@ -10,6 +10,13 @@ export function useProducts(params: ListProductsParams) {
   });
 }
 
+export function useInventoryInsights() {
+  return useQuery({
+    queryKey: ['products', 'insights'],
+    queryFn: () => productApi.getInsights(),
+  });
+}
+
 export function useCreateProduct() {
   const queryClient = useQueryClient();
   return useMutation({
