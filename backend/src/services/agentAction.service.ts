@@ -131,8 +131,11 @@ export const agentActionService = {
    *  already has one pending. */
   async checkInventoryRisks(userId: string) {
     const insights = await productService.getInventoryInsights(userId);
+    // Either signal qualifies: a velocity-projected stockout within 5 days,
+    // or already at/below the low-stock threshold right now (covers a
+    // product with too little sales history to project a velocity at all).
     const urgent = insights.restockRecommendations.filter(
-      (p) => p.daysUntilStockout !== null && p.daysUntilStockout <= 5
+      (p) => (p.daysUntilStockout !== null && p.daysUntilStockout <= 5) || p.stockQuantity <= p.lowStockThreshold
     );
     if (urgent.length === 0) return;
 
@@ -149,11 +152,24 @@ export const agentActionService = {
     for (const p of urgent) {
       if (alreadyProposed.has(p.id)) continue;
 
-      const restockQty = Math.max(10, Math.round((p.unitsSold30d / 30) * 30));
-      const reasoning =
-        p.velocityChangePct > 0
-          ? `Sales velocity increased ${p.velocityChangePct}% over the last 14 days and current stock is projected to run out in ${p.daysUntilStockout} day${p.daysUntilStockout === 1 ? '' : 's'}.`
-          : `Current stock is projected to run out in ${p.daysUntilStockout} day${p.daysUntilStockout === 1 ? '' : 's'} based on recent sales.`;
+      const restockQty =
+        p.unitsSold30d > 0 ? Math.max(10, Math.round((p.unitsSold30d / 30) * 30)) : Math.max(10, p.lowStockThreshold * 2);
+
+      // Lead with whichever condition actually triggered this proposal —
+      // a threshold breach reads as "why is a 20-day runway urgent?" if the
+      // velocity framing is stated first when that's not the real reason.
+      const belowThreshold = p.stockQuantity <= p.lowStockThreshold;
+      let reasoning: string;
+      if (belowThreshold && p.daysUntilStockout !== null) {
+        const velocityNote = p.velocityChangePct > 0 ? `, and sales velocity increased ${p.velocityChangePct}% over the last 14 days` : '';
+        reasoning = `Stock (${p.stockQuantity}) is at or below the restock threshold (${p.lowStockThreshold})${velocityNote} — projected to run out in ${p.daysUntilStockout} day${p.daysUntilStockout === 1 ? '' : 's'} at the current pace.`;
+      } else if (belowThreshold) {
+        reasoning = `Stock (${p.stockQuantity}) is at or below the restock threshold (${p.lowStockThreshold}), with too little sales history yet to project a run-out date.`;
+      } else if (p.velocityChangePct > 0) {
+        reasoning = `Sales velocity increased ${p.velocityChangePct}% over the last 14 days and current stock is projected to run out in ${p.daysUntilStockout} day${p.daysUntilStockout === 1 ? '' : 's'}.`;
+      } else {
+        reasoning = `Current stock is projected to run out in ${p.daysUntilStockout} day${p.daysUntilStockout === 1 ? '' : 's'} based on recent sales.`;
+      }
 
       await this.queue(userId, {
         type: 'RESTOCK_PRODUCT',

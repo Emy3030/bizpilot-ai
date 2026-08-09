@@ -1,12 +1,17 @@
-import { ShieldCheck, ShieldQuestion, ShieldAlert } from 'lucide-react';
+import { ShieldCheck, ShieldQuestion, ShieldAlert, ShieldEllipsis } from 'lucide-react';
 import { CleanverseTrustResult } from '@/types/sale';
 import { cn } from '@/utils/cn';
 
 const STATE_CONFIG = {
-  CONNECTED: {
+  VERIFIED: {
     icon: ShieldCheck,
     label: 'Cleanverse Verified',
     className: 'border-success/30 bg-success/10 text-success',
+  },
+  CONNECTED: {
+    icon: ShieldEllipsis,
+    label: 'Cleanverse Connected — Verifying',
+    className: 'border-primary/30 bg-primary/10 text-primary',
   },
   PENDING_CONFIGURATION: {
     icon: ShieldAlert,
@@ -21,10 +26,10 @@ const STATE_CONFIG = {
 } as const;
 
 /**
- * Never renders a "Verified" claim unless `trust.state === 'CONNECTED'`,
- * which only happens once a real Cleanverse response says so (see
+ * Never renders "Verified" unless `trust.state === 'VERIFIED'`, which only
+ * happens once a real Cleanverse response says so (see
  * cleanverseTrust.service.ts on the backend — there is no fabricated
- * "verified" path). Today this always shows NOT_CONNECTED honestly.
+ * verified path). Today this always shows NOT_CONNECTED honestly.
  */
 export function CleanverseTrustBadge({ trust, compact = false }: { trust: CleanverseTrustResult; compact?: boolean }) {
   const config = STATE_CONFIG[trust.state];

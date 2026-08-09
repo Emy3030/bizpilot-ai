@@ -8,7 +8,14 @@ function getContract(): ethers.Contract | null {
   if (!env.blockchainPrivateKey || !env.trustRegistryContractAddress) return null;
 
   if (!contract) {
-    const provider = new ethers.JsonRpcProvider(env.baseSepoliaRpcUrl);
+    // staticNetwork skips ethers v6's automatic network-detection handshake
+    // (which otherwise retries indefinitely in the background against an
+    // unreachable RPC, spamming "failed to detect network" every second for
+    // the lifetime of the process). Base Sepolia's chain ID is a public,
+    // fixed constant (84532), not something that needs runtime detection.
+    const provider = new ethers.JsonRpcProvider(env.baseSepoliaRpcUrl, undefined, {
+      staticNetwork: ethers.Network.from(84532),
+    });
     const wallet = new ethers.Wallet(env.blockchainPrivateKey, provider);
     contract = new ethers.Contract(env.trustRegistryContractAddress, TRUST_REGISTRY_ABI, wallet);
   }
@@ -40,6 +47,10 @@ export const blockchainService = {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('[Blockchain] Failed to anchor document hash:', error);
+      // Drop the cached contract/provider so a transient RPC outage doesn't
+      // permanently wedge every future anchor attempt on the same broken
+      // connection for the rest of the process's lifetime.
+      contract = null;
       return null;
     }
   },

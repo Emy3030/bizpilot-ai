@@ -2,7 +2,7 @@ export type PaymentStatus = 'PAID' | 'PARTIAL' | 'UNPAID';
 export type PaymentMethod = 'CASH' | 'TRANSFER' | 'CARD' | 'CREDIT';
 export type ChainStatus = 'PENDING' | 'CONFIRMED' | 'FAILED';
 
-export type CleanverseConnectionState = 'NOT_CONNECTED' | 'PENDING_CONFIGURATION' | 'CONNECTED';
+export type CleanverseConnectionState = 'NOT_CONNECTED' | 'PENDING_CONFIGURATION' | 'CONNECTED' | 'VERIFIED';
 
 export interface CleanverseTrustResult {
   state: CleanverseConnectionState;

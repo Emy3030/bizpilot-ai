@@ -219,9 +219,14 @@ export const productService = {
       .sort((a, b) => b.stockQuantity - a.stockQuantity)
       .slice(0, 5);
 
+    // Two independent signals, either one qualifies: a velocity-projected
+    // stockout within 14 days, OR already at/below the low-stock threshold
+    // right now. A product can be low-stock with too little sales history
+    // to project a velocity (e.g. one sale ever) — without this second
+    // condition it would never surface here at all.
     const restockRecommendations = enriched
-      .filter((p) => p.daysUntilStockout !== null && p.daysUntilStockout <= 14)
-      .sort((a, b) => (a.daysUntilStockout ?? 0) - (b.daysUntilStockout ?? 0))
+      .filter((p) => (p.daysUntilStockout !== null && p.daysUntilStockout <= 14) || p.stockQuantity <= p.lowStockThreshold)
+      .sort((a, b) => (a.daysUntilStockout ?? 9999) - (b.daysUntilStockout ?? 9999))
       .slice(0, 8);
 
     return { fastMoving, slowMoving, restockRecommendations, totalProducts: products.length };
