@@ -4,6 +4,7 @@ import { hashDocument } from '../utils/hash';
 import { pdfService } from './pdf.service';
 import { qrCodeService } from './qrcode.service';
 import { blockchainService } from './blockchain.service';
+import { cleanverseTrustService } from './cleanverseTrust.service';
 
 interface SaleItemInput {
   productId: string;
@@ -134,12 +135,20 @@ export const saleService = {
         },
       });
 
-      // Decrement stock for each product sold
+      // Decrement stock for each product sold. Guarded by stockQuantity >=
+      // quantity in the WHERE clause (not a separate read-then-write) so two
+      // concurrent sales for the same product can't both pass validation and
+      // oversell — Postgres locks the row for the duration of this UPDATE,
+      // and the second transaction re-checks against the post-commit stock.
       for (const item of itemsData) {
-        await tx.product.update({
-          where: { id: item.productId },
+        const result = await tx.product.updateMany({
+          where: { id: item.productId, stockQuantity: { gte: item.quantity } },
           data: { stockQuantity: { decrement: item.quantity } },
         });
+        if (result.count === 0) {
+          const product = products.find((p) => p.id === item.productId)!;
+          throw ApiError.conflict(`Not enough stock for ${product.name} — it just changed. Please try again.`);
+        }
       }
 
       // Track unpaid balance against the customer
@@ -192,7 +201,17 @@ export const saleService = {
       },
     });
     if (!sale) throw ApiError.notFound('Sale not found');
-    return sale;
+
+    const [invoiceTrust, receiptTrust] = await Promise.all([
+      sale.invoice ? cleanverseTrustService.getTrustState(sale.invoice.documentHash) : null,
+      sale.receipt ? cleanverseTrustService.getTrustState(sale.receipt.documentHash) : null,
+    ]);
+
+    return {
+      ...sale,
+      invoice: sale.invoice ? { ...sale.invoice, cleanverseTrust: invoiceTrust } : null,
+      receipt: sale.receipt ? { ...sale.receipt, cleanverseTrust: receiptTrust } : null,
+    };
   },
 
   async recordPayment(userId: string, id: string, amount: number) {
@@ -208,10 +227,18 @@ export const saleService = {
       const appliedAmount = newPaid - currentPaid;
       const newStatus = newPaid >= total ? 'PAID' : newPaid > 0 ? 'PARTIAL' : 'UNPAID';
 
-      const updatedSale = await tx.sale.update({
-        where: { id },
+      // Guarded on the amountPaid we just read (optimistic concurrency) so
+      // two concurrent payments on the same sale can't silently overwrite
+      // one another — whichever commits second finds amountPaid has moved
+      // and fails loudly instead of losing the first payment.
+      const updateResult = await tx.sale.updateMany({
+        where: { id, userId, amountPaid: sale.amountPaid },
         data: { amountPaid: newPaid, paymentStatus: newStatus },
       });
+      if (updateResult.count === 0) {
+        throw ApiError.conflict('This sale was just updated elsewhere. Please refresh and try again.');
+      }
+      const updatedSale = await tx.sale.findFirstOrThrow({ where: { id, userId } });
 
       if (sale.customerId && appliedAmount > 0) {
         await tx.customer.update({
@@ -243,7 +270,7 @@ export const saleService = {
     };
     const documentHash = hashDocument(documentData);
 
-    const { relativePath } = await pdfService.generate({
+    const { url: pdfUrl } = await pdfService.generate({
       documentNumber: invoiceNumber,
       documentType: 'INVOICE',
       businessName: sale.user.businessName,
@@ -271,7 +298,7 @@ export const saleService = {
         userId,
         saleId: sale.id,
         invoiceNumber,
-        pdfUrl: relativePath,
+        pdfUrl,
         documentHash,
         txHash: anchorResult?.txHash || null,
         chainStatus,
@@ -298,7 +325,7 @@ export const saleService = {
     };
     const documentHash = hashDocument(documentData);
 
-    const { relativePath } = await pdfService.generate({
+    const { url: pdfUrl } = await pdfService.generate({
       documentNumber: receiptNumber,
       documentType: 'RECEIPT',
       businessName: sale.user.businessName,
@@ -328,7 +355,7 @@ export const saleService = {
         userId,
         saleId: sale.id,
         receiptNumber,
-        pdfUrl: relativePath,
+        pdfUrl,
         qrCodeUrl,
         documentHash,
         txHash: anchorResult?.txHash || null,

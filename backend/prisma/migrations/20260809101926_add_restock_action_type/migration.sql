@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "AgentActionType" ADD VALUE 'RESTOCK_PRODUCT';

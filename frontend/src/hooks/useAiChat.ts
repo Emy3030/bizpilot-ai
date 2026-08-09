@@ -40,6 +40,7 @@ export function useSendAiMessage() {
           role: 'ASSISTANT',
           content: result.reply,
           createdAt: result.createdAt,
+          actionsPerformed: result.actionsPerformed,
         },
       ]);
     },

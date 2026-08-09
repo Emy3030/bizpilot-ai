@@ -12,6 +12,8 @@ import aiRoutes from './ai.routes';
 import verifyRoutes from './verify.routes';
 import newsRoutes from './news.routes';
 import currencyRoutes from './currency.routes';
+import agentActionRoutes from './agentAction.routes';
+import agentRoutes from './agent.routes';
 
 const router = Router();
 
@@ -32,5 +34,7 @@ router.use('/ai', aiRoutes);
 router.use('/verify', verifyRoutes); // public — no auth middleware inside
 router.use('/news', newsRoutes);
 router.use('/currency', currencyRoutes);
+router.use('/agent-actions', agentActionRoutes);
+router.use('/agents', agentRoutes);
 
 export default router;

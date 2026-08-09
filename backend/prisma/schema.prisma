@@ -43,6 +43,7 @@ model User {
   supplierAgreements SupplierAgreement[]
   warrantyCertificates WarrantyCertificate[]
   aiChatMessages     AiChatMessage[]
+  agentActions       AgentAction[]
 
   @@map("users")
 }
@@ -301,4 +302,44 @@ model AiChatMessage {
 
   @@index([userId, createdAt])
   @@map("ai_chat_messages")
+}
+
+// ==============================================
+// AI AGENT — proposed actions awaiting approval
+// ==============================================
+
+enum AgentActionType {
+  CREATE_CUSTOMER
+  RECORD_SALE
+  RESTOCK_PRODUCT
+}
+
+enum AgentActionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXECUTED
+  FAILED
+}
+
+model AgentAction {
+  id           String            @id @default(cuid())
+  userId       String
+  agentName    String            @default("COO")
+  type         AgentActionType
+  status       AgentActionStatus @default(PENDING)
+  summary      String
+  reasoning    String?           @db.Text
+  payload      Json
+  result       Json?
+  errorMessage String?
+  createdAt    DateTime          @default(now())
+  decidedAt    DateTime?
+  executedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+  @@map("agent_actions")
 }
