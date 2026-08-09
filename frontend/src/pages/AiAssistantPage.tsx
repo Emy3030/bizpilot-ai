@@ -10,12 +10,18 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { ChatBubble } from '@/components/ai/ChatBubble';
 import { SuggestedPrompts } from '@/components/ai/SuggestedPrompts';
 import { TypingIndicator } from '@/components/ai/TypingIndicator';
+import { PendingApprovals } from '@/components/ai/PendingApprovals';
+import { AgentsOverview } from '@/components/ai/AgentsOverview';
+import { AgentActivityFeed } from '@/components/dashboard/AgentActivityFeed';
 import { PageTransition } from '@/components/motion/PageTransition';
+import { FadeInSection } from '@/components/motion/FadeInSection';
 import { useAiChatHistory, useSendAiMessage, useClearAiChat } from '@/hooks/useAiChat';
+import { useRecentAgentActivity } from '@/hooks/useAgentActions';
 import { getErrorMessage } from '@/utils/getErrorMessage';
 
 export default function AiAssistantPage() {
   const { data: messages, isLoading } = useAiChatHistory();
+  const { data: recentActivity } = useRecentAgentActivity();
   const sendMessage = useSendAiMessage();
   const clearChat = useClearAiChat();
 
@@ -55,9 +61,11 @@ export default function AiAssistantPage() {
         <div>
           <h2 className="flex items-center gap-2 text-xl font-semibold tracking-tight">
             <Sparkles className="h-5 w-5 text-primary" />
-            AI Assistant
+            AI COO
           </h2>
-          <p className="text-sm text-muted-foreground">Ask about your business, or ask it to write marketing copy.</p>
+          <p className="text-sm text-muted-foreground">
+            Your Chief Operating Officer — ask it anything, or review what it's already prepared below.
+          </p>
         </div>
         {!!messages?.length && (
           <Button variant="outline" onClick={() => setClearDialogOpen(true)}>
@@ -66,6 +74,7 @@ export default function AiAssistantPage() {
         )}
       </div>
 
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
       <Card className="flex h-[70vh] flex-col">
         <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-6">
           {isLoading ? (
@@ -78,7 +87,7 @@ export default function AiAssistantPage() {
                 <Sparkles className="h-6 w-6" />
               </div>
               <div>
-                <p className="font-medium">Ask me anything about your business</p>
+                <p className="font-medium">Here's what I'm watching — ask me what changed, or what needs attention.</p>
                 <p className="text-sm text-muted-foreground">Try one of these to get started:</p>
               </div>
               <SuggestedPrompts onSelect={handleSend} />
@@ -125,6 +134,19 @@ export default function AiAssistantPage() {
           </form>
         </CardContent>
       </Card>
+
+      <div className="space-y-6">
+        <FadeInSection>
+          <PendingApprovals />
+        </FadeInSection>
+        <FadeInSection delay={0.05}>
+          <AgentsOverview />
+        </FadeInSection>
+        <FadeInSection delay={0.1}>
+          <AgentActivityFeed items={recentActivity ?? []} />
+        </FadeInSection>
+      </div>
+      </div>
 
       <ConfirmDialog
         open={clearDialogOpen}

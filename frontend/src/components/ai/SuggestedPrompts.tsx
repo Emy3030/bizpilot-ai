@@ -1,9 +1,9 @@
 const SUGGESTIONS = [
+  'Sell 3 Peak Milk and 2 Coca-Cola to John',
   'How is my business doing today?',
-  'What product is selling most?',
   'What should I restock?',
+  'Add a new customer',
   'Generate a WhatsApp advert',
-  'Generate a discount campaign',
   "Summarize this week's sales",
 ];
 
