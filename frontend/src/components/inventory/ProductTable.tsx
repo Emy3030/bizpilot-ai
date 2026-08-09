@@ -96,10 +96,10 @@ export function ProductTable({ products, meta, isLoading, currency, onEdit, onPa
                         </td>
                         <td className="px-6 py-3">
                           <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => onEdit(p)}>
+                            <Button variant="ghost" size="icon" onClick={() => onEdit(p)} aria-label={`Edit ${p.name}`}>
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(p)}>
+                            <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(p)} aria-label={`Delete ${p.name}`}>
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
@@ -118,7 +118,7 @@ export function ProductTable({ products, meta, isLoading, currency, onEdit, onPa
                 Page {meta.page} of {meta.totalPages} · {meta.total} products
               </p>
               <div className="flex gap-2">
-                <Button variant="outline" size="icon" disabled={meta.page <= 1} onClick={() => onPageChange(meta.page - 1)}>
+                <Button variant="outline" size="icon" disabled={meta.page <= 1} onClick={() => onPageChange(meta.page - 1)} aria-label="Previous page">
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <Button
@@ -126,6 +126,7 @@ export function ProductTable({ products, meta, isLoading, currency, onEdit, onPa
                   size="icon"
                   disabled={meta.page >= meta.totalPages}
                   onClick={() => onPageChange(meta.page + 1)}
+                  aria-label="Next page"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>

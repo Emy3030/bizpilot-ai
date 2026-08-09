@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Pencil, Trash2, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -72,7 +73,11 @@ export function CustomerTable({ customers, meta, isLoading, currency, onEdit, on
                     const debt = Number(c.outstandingDebt);
                     return (
                       <tr key={c.id} className="border-b border-border/60 last:border-0">
-                        <td className="px-6 py-4 font-medium">{c.name}</td>
+                        <td className="px-6 py-4 font-medium">
+                          <Link to={`/customers/${c.id}`} className="hover:text-primary hover:underline">
+                            {c.name}
+                          </Link>
+                        </td>
                         <td className="px-6 py-4 text-muted-foreground">
                           {c.phone || c.email || '—'}
                         </td>
@@ -86,10 +91,10 @@ export function CustomerTable({ customers, meta, isLoading, currency, onEdit, on
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => onEdit(c)}>
+                            <Button variant="ghost" size="icon" onClick={() => onEdit(c)} aria-label={`Edit ${c.name}`}>
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(c)}>
+                            <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(c)} aria-label={`Delete ${c.name}`}>
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
@@ -113,6 +118,7 @@ export function CustomerTable({ customers, meta, isLoading, currency, onEdit, on
                   size="icon"
                   disabled={meta.page <= 1}
                   onClick={() => onPageChange(meta.page - 1)}
+                  aria-label="Previous page"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -121,6 +127,7 @@ export function CustomerTable({ customers, meta, isLoading, currency, onEdit, on
                   size="icon"
                   disabled={meta.page >= meta.totalPages}
                   onClick={() => onPageChange(meta.page + 1)}
+                  aria-label="Next page"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>

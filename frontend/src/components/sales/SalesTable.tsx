@@ -74,7 +74,7 @@ export function SalesTable({ sales, meta, isLoading, currency, onView, onPageCha
                       {new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </td>
                     <td className="px-6 py-3 text-right">
-                      <Button variant="ghost" size="icon" onClick={() => onView(s.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => onView(s.id)} aria-label={`View sale for ${s.customer?.name || 'walk-in customer'}`}>
                         <Eye className="h-4 w-4" />
                       </Button>
                     </td>
@@ -91,7 +91,7 @@ export function SalesTable({ sales, meta, isLoading, currency, onView, onPageCha
               Page {meta.page} of {meta.totalPages} · {meta.total} sales
             </p>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" disabled={meta.page <= 1} onClick={() => onPageChange(meta.page - 1)}>
+              <Button variant="outline" size="icon" disabled={meta.page <= 1} onClick={() => onPageChange(meta.page - 1)} aria-label="Previous page">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button
@@ -99,6 +99,7 @@ export function SalesTable({ sales, meta, isLoading, currency, onView, onPageCha
                 size="icon"
                 disabled={meta.page >= meta.totalPages}
                 onClick={() => onPageChange(meta.page + 1)}
+                aria-label="Next page"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

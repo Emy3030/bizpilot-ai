@@ -5,12 +5,14 @@ import { Plus, Search, Tags, AlertTriangle } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { PageTransition } from '@/components/motion/PageTransition';
 import { FadeInSection } from '@/components/motion/FadeInSection';
 import { ProductFormDialog } from '@/components/inventory/ProductFormDialog';
 import { ProductTable } from '@/components/inventory/ProductTable';
 import { CategoryManagerDialog } from '@/components/inventory/CategoryManagerDialog';
+import { InventoryInsights } from '@/components/inventory/InventoryInsights';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useAuth } from '@/context/AuthContext';
@@ -32,7 +34,7 @@ export default function InventoryPage() {
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   const { data: categories } = useCategories();
-  const { data, isLoading, isFetching } = useProducts({
+  const { data, isLoading, isFetching, isError } = useProducts({
     page,
     limit: 20,
     search: debouncedSearch,
@@ -85,7 +87,11 @@ export default function InventoryPage() {
           }
         />
 
-        <FadeInSection delay={0.05} className="mb-4 flex flex-wrap items-center gap-2">
+        <FadeInSection delay={0.05} className="mb-6">
+          <InventoryInsights />
+        </FadeInSection>
+
+        <FadeInSection delay={0.1} className="mb-4 flex flex-wrap items-center gap-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -97,6 +103,7 @@ export default function InventoryPage() {
           </div>
 
           <select
+            aria-label="Filter by category"
             className="h-10 rounded-lg border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             value={categoryId}
             onChange={(e) => {
@@ -130,15 +137,25 @@ export default function InventoryPage() {
           </button>
         </FadeInSection>
 
-        <FadeInSection delay={0.1}>
-          <ProductTable
-            products={data?.data ?? []}
-            meta={data?.meta}
-            isLoading={isLoading || (isFetching && !data)}
-            currency={currency}
-            onEdit={openEdit}
-            onPageChange={setPage}
-          />
+        <FadeInSection delay={0.15}>
+          {isError ? (
+            <Card>
+              <CardContent className="flex flex-col items-center gap-2 p-12 text-center">
+                <AlertTriangle className="h-8 w-8 text-destructive" />
+                <p className="font-medium">Couldn't load inventory</p>
+                <p className="text-sm text-muted-foreground">Check that the API server is running and try refreshing the page.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <ProductTable
+              products={data?.data ?? []}
+              meta={data?.meta}
+              isLoading={isLoading || (isFetching && !data)}
+              currency={currency}
+              onEdit={openEdit}
+              onPageChange={setPage}
+            />
+          )}
         </FadeInSection>
 
         <ProductFormDialog open={formOpen} onOpenChange={setFormOpen} product={editingProduct} />

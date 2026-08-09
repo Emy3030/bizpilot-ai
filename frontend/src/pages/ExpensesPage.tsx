@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Tags } from 'lucide-react';
+import { Plus, Tags, AlertTriangle } from 'lucide-react';
 
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { PageTransition } from '@/components/motion/PageTransition';
 import { FadeInSection } from '@/components/motion/FadeInSection';
@@ -28,7 +29,7 @@ export default function ExpensesPage() {
 
   const { data: categories } = useExpenseCategories();
   const { data: summary, isLoading: summaryLoading } = useExpenseSummary();
-  const { data, isLoading, isFetching } = useExpenses({
+  const { data, isLoading, isFetching, isError } = useExpenses({
     page,
     limit: 20,
     categoryId: categoryId || undefined,
@@ -80,6 +81,7 @@ export default function ExpensesPage() {
 
         <FadeInSection delay={0.1} className="mb-4">
           <select
+            aria-label="Filter by category"
             className="h-10 rounded-lg border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             value={categoryId}
             onChange={(e) => {
@@ -97,14 +99,24 @@ export default function ExpensesPage() {
         </FadeInSection>
 
         <FadeInSection delay={0.15}>
-          <ExpenseTable
-            expenses={data?.data ?? []}
-            meta={data?.meta}
-            isLoading={isLoading || (isFetching && !data)}
-            currency={currency}
-            onEdit={openEdit}
-            onPageChange={setPage}
-          />
+          {isError ? (
+            <Card>
+              <CardContent className="flex flex-col items-center gap-2 p-12 text-center">
+                <AlertTriangle className="h-8 w-8 text-destructive" />
+                <p className="font-medium">Couldn't load expenses</p>
+                <p className="text-sm text-muted-foreground">Check that the API server is running and try refreshing the page.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <ExpenseTable
+              expenses={data?.data ?? []}
+              meta={data?.meta}
+              isLoading={isLoading || (isFetching && !data)}
+              currency={currency}
+              onEdit={openEdit}
+              onPageChange={setPage}
+            />
+          )}
         </FadeInSection>
 
         <ExpenseFormDialog open={formOpen} onOpenChange={setFormOpen} expense={editingExpense} />

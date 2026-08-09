@@ -1,10 +1,11 @@
 import { useRef, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, AlertTriangle } from 'lucide-react';
 
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { PageTransition } from '@/components/motion/PageTransition';
 import { FadeInSection } from '@/components/motion/FadeInSection';
@@ -24,7 +25,7 @@ export default function CustomersPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
 
-  const { data, isLoading, isFetching } = useCustomers({ page, limit: 20, search: debouncedSearch });
+  const { data, isLoading, isFetching, isError } = useCustomers({ page, limit: 20, search: debouncedSearch });
 
   const [searchParams, setSearchParams] = useSearchParams();
   useEffect(() => {
@@ -80,14 +81,24 @@ export default function CustomersPage() {
         />
 
         <FadeInSection delay={0.05}>
-          <CustomerTable
-            customers={data?.data ?? []}
-            meta={data?.meta}
-            isLoading={isLoading || (isFetching && !data)}
-            currency={currency}
-            onEdit={openEdit}
-            onPageChange={setPage}
-          />
+          {isError ? (
+            <Card>
+              <CardContent className="flex flex-col items-center gap-2 p-12 text-center">
+                <AlertTriangle className="h-8 w-8 text-destructive" />
+                <p className="font-medium">Couldn't load customers</p>
+                <p className="text-sm text-muted-foreground">Check that the API server is running and try refreshing the page.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <CustomerTable
+              customers={data?.data ?? []}
+              meta={data?.meta}
+              isLoading={isLoading || (isFetching && !data)}
+              currency={currency}
+              onEdit={openEdit}
+              onPageChange={setPage}
+            />
+          )}
         </FadeInSection>
 
         <CustomerFormDialog open={formOpen} onOpenChange={setFormOpen} customer={editingCustomer} />

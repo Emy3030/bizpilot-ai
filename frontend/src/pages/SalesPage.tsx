@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, AlertTriangle } from 'lucide-react';
 
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { PageTransition } from '@/components/motion/PageTransition';
 import { FadeInSection } from '@/components/motion/FadeInSection';
@@ -31,7 +32,7 @@ export default function SalesPage() {
   const [newSaleOpen, setNewSaleOpen] = useState(false);
   const [viewingSaleId, setViewingSaleId] = useState<string | null>(null);
 
-  const { data, isLoading, isFetching } = useSales({
+  const { data, isLoading, isFetching, isError } = useSales({
     page,
     limit: 20,
     paymentStatus: statusFilter || undefined,
@@ -80,14 +81,24 @@ export default function SalesPage() {
         </FadeInSection>
 
         <FadeInSection delay={0.1}>
-          <SalesTable
-            sales={data?.data ?? []}
-            meta={data?.meta}
-            isLoading={isLoading || (isFetching && !data)}
-            currency={currency}
-            onView={setViewingSaleId}
-            onPageChange={setPage}
-          />
+          {isError ? (
+            <Card>
+              <CardContent className="flex flex-col items-center gap-2 p-12 text-center">
+                <AlertTriangle className="h-8 w-8 text-destructive" />
+                <p className="font-medium">Couldn't load sales</p>
+                <p className="text-sm text-muted-foreground">Check that the API server is running and try refreshing the page.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <SalesTable
+              sales={data?.data ?? []}
+              meta={data?.meta}
+              isLoading={isLoading || (isFetching && !data)}
+              currency={currency}
+              onView={setViewingSaleId}
+              onPageChange={setPage}
+            />
+          )}
         </FadeInSection>
 
         <NewSaleDialog open={newSaleOpen} onOpenChange={setNewSaleOpen} />
