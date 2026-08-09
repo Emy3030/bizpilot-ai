@@ -26,7 +26,13 @@ export function errorHandler(
   } else if (err.name === 'PrismaClientKnownRequestError') {
     statusCode = 400;
     message = 'Database request error';
-  } else if (err.message) {
+  } else if (err.message && !env.isProduction) {
+    // Unexpected (non-ApiError) errors can carry internal detail — a raw
+    // exception message, a fragment of a connection string, a file path.
+    // Safe to see locally while debugging; not safe to hand to an API
+    // caller in production (this middleware also guards the public,
+    // unauthenticated /verify endpoint). The real error is still logged
+    // server-side below regardless of environment.
     message = err.message;
   }
 
