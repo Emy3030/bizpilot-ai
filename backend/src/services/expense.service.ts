@@ -41,6 +41,14 @@ function startOfMonth(): Date {
   return d;
 }
 
+async function assertCategoryOwned(userId: string, categoryId: string | null | undefined) {
+  if (!categoryId) return;
+  const category = await prisma.expenseCategory.findFirst({ where: { id: categoryId, userId } });
+  if (!category) {
+    throw ApiError.badRequest('Selected category was not found');
+  }
+}
+
 export const expenseService = {
   async list(userId: string, { page, limit, categoryId, from, to }: ListParams) {
     const where = {
@@ -76,6 +84,7 @@ export const expenseService = {
   },
 
   async create(userId: string, input: ExpenseInput) {
+    await assertCategoryOwned(userId, input.categoryId);
     return prisma.expense.create({
       data: {
         userId,
@@ -92,6 +101,9 @@ export const expenseService = {
     const existing = await prisma.expense.findFirst({ where: { id, userId } });
     if (!existing) {
       throw ApiError.notFound('Expense not found');
+    }
+    if (input.categoryId !== undefined) {
+      await assertCategoryOwned(userId, input.categoryId);
     }
     return prisma.expense.update({
       where: { id },
