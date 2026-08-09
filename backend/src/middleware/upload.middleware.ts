@@ -1,22 +1,6 @@
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 import { Request } from 'express';
 import { ApiError } from '../utils/ApiError';
-
-const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads', 'products');
-
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-  filename: (_req, file, cb) => {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    cb(null, `${unique}${path.extname(file.originalname)}`);
-  },
-});
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
@@ -28,8 +12,11 @@ function fileFilter(_req: Request, file: Express.Multer.File, cb: multer.FileFil
   cb(null, true);
 }
 
+// In-memory buffer, not disk — the file is uploaded straight to Cloudinary
+// from the buffer (see cloudinary.ts), since local disk doesn't survive a
+// Render redeploy.
 export const uploadProductImage = multer({
-  storage,
+  storage: multer.memoryStorage(),
   fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 }).single('image');

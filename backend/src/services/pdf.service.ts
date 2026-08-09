@@ -1,8 +1,5 @@
 import PDFDocument from 'pdfkit';
-import fs from 'fs';
-import path from 'path';
-
-const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
+import { uploadBuffer } from '../config/cloudinary';
 
 export interface SaleDocumentData {
   documentNumber: string;
@@ -19,27 +16,17 @@ export interface SaleDocumentData {
   documentHash?: string;
 }
 
-function ensureDir(dir: string) {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-}
-
 function money(amount: number, currency: string) {
   return `${currency} ${amount.toFixed(2)}`;
 }
 
-export const pdfService = {
-  async generate(data: SaleDocumentData): Promise<{ relativePath: string; absolutePath: string }> {
-    const folder = data.documentType === 'INVOICE' ? 'invoices' : 'receipts';
-    const dir = path.join(UPLOAD_ROOT, folder);
-    ensureDir(dir);
-
-    const filename = `${data.documentNumber}.pdf`;
-    const absolutePath = path.join(dir, filename);
-    const relativePath = `/uploads/${folder}/${filename}`;
-
+function renderToBuffer(data: SaleDocumentData): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
-    const stream = fs.createWriteStream(absolutePath);
-    doc.pipe(stream);
+    const chunks: Buffer[] = [];
+    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
 
     // Header
     doc.fontSize(20).fillColor('#4F46E5').text(data.businessName, { continued: false });
@@ -80,7 +67,7 @@ export const pdfService = {
     doc.fontSize(10).fillColor('#6B7280');
     doc.text(`Amount paid: ${money(data.amountPaid, data.currency)}`, 360, y);
     y += 15;
-    doc.text(`Payment status: ${data.paymentStatus} \u00b7 ${data.paymentMethod}`, 360, y);
+    doc.text(`Payment status: ${data.paymentStatus} · ${data.paymentMethod}`, 360, y);
 
     if (data.documentHash) {
       y += 35;
@@ -90,12 +77,24 @@ export const pdfService = {
     }
 
     doc.end();
+  });
+}
 
-    await new Promise<void>((resolve, reject) => {
-      stream.on('finish', () => resolve());
-      stream.on('error', reject);
+export const pdfService = {
+  async generate(data: SaleDocumentData): Promise<{ url: string }> {
+    const folder = data.documentType === 'INVOICE' ? 'invoices' : 'receipts';
+    const buffer = await renderToBuffer(data);
+
+    // resource_type 'raw' — it's a PDF, not an image. Requires "Allow
+    // delivery of PDF and ZIP files" enabled in the Cloudinary dashboard
+    // (Settings -> Security), which is off by default on new accounts.
+    const { url } = await uploadBuffer(buffer, {
+      folder: `bizpilot/${folder}`,
+      public_id: data.documentNumber,
+      resource_type: 'raw',
+      format: 'pdf',
     });
 
-    return { relativePath, absolutePath };
+    return { url };
   },
 };

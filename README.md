@@ -53,14 +53,13 @@ bizpilot-ai/
 ├── backend/            Express API (TypeScript)
 │   ├── prisma/          schema.prisma - the single source of truth for the data model
 │   ├── src/
-│   │   ├── config/       env loader, Prisma client, contract ABI
+│   │   ├── config/       env loader, Prisma client, contract ABI, Cloudinary
 │   │   ├── controllers/  one per resource (auth, customer, product, sale, ...)
 │   │   ├── services/     business logic - this is where the real work happens
-│   │   ├── middleware/   auth guard, error handler, validation, upload (multer)
+│   │   ├── middleware/   auth guard, error handler, validation, upload (multer, in-memory)
 │   │   ├── routes/       route definitions, mounted under /api/v1
 │   │   ├── validators/   express-validator rule sets
 │   │   └── utils/        ApiError, asyncHandler, JWT helpers, hashing, currency formatting
-│   └── uploads/          product images, generated PDFs, QR codes (local disk - see limitations)
 │
 ├── frontend/            Vite React app
 │   └── src/
@@ -145,6 +144,9 @@ Only needed if you want invoices/receipts to actually anchor on-chain instead of
 | JWT_EXPIRES_IN | No | Defaults to 7d |
 | PORT | No | Defaults to 5000 |
 | CLIENT_URL | Yes | Frontend origin, used for CORS and building QR verification links |
+| CLOUDINARY_CLOUD_NAME | Yes | Cloudinary account cloud name — stores product images, invoice/receipt PDFs, and QR codes (Render's filesystem is ephemeral, so these can't live on local disk) |
+| CLOUDINARY_API_KEY | Yes | Cloudinary API key |
+| CLOUDINARY_API_SECRET | Yes | Cloudinary API secret |
 | GEMINI_API_KEY | No* | AI Assistant returns a graceful "not configured" message without it |
 | BASE_SEPOLIA_RPC_URL | No | Defaults to the public sepolia.base.org RPC |
 | BLOCKCHAIN_PRIVATE_KEY | No* | Wallet used to submit anchor transactions |
@@ -228,7 +230,7 @@ All routes are mounted under /api/v1. Authenticated routes require Authorization
 
 ## Known limitations (read before a demo)
 
-- **Uploaded images, generated PDFs, and QR codes are stored on local disk** (backend/uploads/). This works for local development and is fine for a live demo run from your machine, but Render's filesystem is ephemeral - anything written there is lost on redeploy or restart. For anything beyond a hackathon demo, swap this for S3, Cloudinary, or similar.
+- **Uploaded images, generated PDFs, and QR codes are stored on Cloudinary**, not local disk — this survives Render redeploys/restarts. Requires `CLOUDINARY_*` env vars to be set, and "Allow delivery of PDF and ZIP files" enabled in the Cloudinary dashboard under Settings → Security (off by default on new accounts), or invoice/receipt PDFs will 401.
 - **On-chain anchoring costs testnet ETH and takes a few seconds per document.** Each invoice/receipt generation is a real blockchain transaction that waits for confirmation. Keep the configured wallet funded, and expect a short delay (2-5s) when generating documents once blockchain is wired up.
 - **The AI Assistant needs a real Gemini API key to do anything beyond a fallback message.** It won't crash without one, but it also won't answer questions.
 - This is a hackathon MVP: no automated test suite, no email verification, no multi-currency conversion (the app displays one currency per business, set at signup), and no role-based permission enforcement beyond the OWNER/STAFF field existing in the schema for future use.
