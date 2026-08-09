@@ -1,14 +1,19 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ShieldCheck, ShieldX, Loader2, Rocket } from 'lucide-react';
+import { ShieldCheck, ShieldX, Loader2, Rocket, Sun, Moon } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { ChainStatusAnimation } from '@/components/blockchain/ChainStatusAnimation';
+import { VerificationTimeline } from '@/components/blockchain/VerificationTimeline';
+import { CleanverseTrustBadge } from '@/components/blockchain/CleanverseTrustBadge';
 import { verifyApi } from '@/services/saleApi';
 import { formatCurrency } from '@/utils/formatCurrency';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function VerifyPage() {
   const { hash } = useParams<{ hash: string }>();
+  const { theme, toggleTheme } = useTheme();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['verify', hash],
@@ -18,13 +23,22 @@ export default function VerifyPage() {
   });
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-accent/40 px-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-accent/40 px-4">
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={toggleTheme}
+        aria-label="Toggle theme"
+        className="absolute right-4 top-4"
+      >
+        {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      </Button>
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-2 text-center">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
             <Rocket className="h-5 w-5" />
           </div>
-          <h1 className="font-display text-xl font-bold tracking-tight">BizPilot AI — Record Verification</h1>
+          <h1 className="font-display text-xl font-bold tracking-tight">BizPilot — Record Verification</h1>
         </div>
 
         <Card className="border-border/60 shadow-xl shadow-black/5">
@@ -60,11 +74,17 @@ export default function VerifyPage() {
                 <div className="space-y-2 text-sm">
                   <Row label="Issued by" value={data.businessName} />
                   <Row label="Document" value={`${data.documentType} · ${data.documentNumber}`} />
-                  <Row label="Amount" value={formatCurrency(data.totalAmount, 'NGN')} />
+                  <Row label="Amount" value={formatCurrency(data.totalAmount, data.currency)} />
                   <Row label="Issued on" value={new Date(data.issuedAt).toLocaleDateString('en-US', { dateStyle: 'medium' })} />
                 </div>
 
                 <ChainStatusAnimation status={data.chainStatus} txHash={data.txHash} />
+
+                <CleanverseTrustBadge trust={data.cleanverseTrust} />
+
+                <div className="rounded-lg border border-border p-4">
+                  <VerificationTimeline chainStatus={data.chainStatus} issuedAt={data.issuedAt} />
+                </div>
 
                 <div className="rounded-lg bg-secondary/50 p-3">
                   <p className="text-xs text-muted-foreground">Document hash</p>

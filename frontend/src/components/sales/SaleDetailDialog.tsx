@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ProductThumbnail } from '@/components/ui/product-thumbnail';
 import { ChainStatusAnimation } from '@/components/blockchain/ChainStatusAnimation';
+import { CleanverseTrustBadge } from '@/components/blockchain/CleanverseTrustBadge';
 import { useSale, useGenerateInvoice, useGenerateReceipt, useRecordPayment } from '@/hooks/useSales';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/utils/formatCurrency';
@@ -158,6 +159,7 @@ export function SaleDetailDialog({ saleId, onOpenChange }: { saleId: string | nu
               {sale.invoice && (
                 <ChainStatusAnimation status={sale.invoice.chainStatus} txHash={sale.invoice.txHash} compact />
               )}
+              {sale.invoice?.cleanverseTrust && <CleanverseTrustBadge trust={sale.invoice.cleanverseTrust} compact />}
 
               <div className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div className="flex items-center gap-2 text-sm">
@@ -179,6 +181,7 @@ export function SaleDetailDialog({ saleId, onOpenChange }: { saleId: string | nu
               {sale.receipt && (
                 <ChainStatusAnimation status={sale.receipt.chainStatus} txHash={sale.receipt.txHash} compact />
               )}
+              {sale.receipt?.cleanverseTrust && <CleanverseTrustBadge trust={sale.receipt.cleanverseTrust} compact />}
 
               {sale.receipt?.qrCodeUrl && (
                 <div className="flex flex-col items-center gap-2 rounded-lg border border-border p-4">

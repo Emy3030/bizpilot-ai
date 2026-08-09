@@ -17,10 +17,18 @@ export const env = {
   jwtSecret: required('JWT_SECRET'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+  cloudinaryCloudName: required('CLOUDINARY_CLOUD_NAME'),
+  cloudinaryApiKey: required('CLOUDINARY_API_KEY'),
+  cloudinaryApiSecret: required('CLOUDINARY_API_SECRET'),
   geminiApiKey: process.env.GEMINI_API_KEY || '',
   newsApiKey: process.env.NEWS_API_KEY || '',
   baseSepoliaRpcUrl: process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org',
   blockchainPrivateKey: process.env.BLOCKCHAIN_PRIVATE_KEY || '',
   trustRegistryContractAddress: process.env.TRUST_REGISTRY_CONTRACT_ADDRESS || '',
+  // Cleanverse (CVI/CVA) trust layer — no credentials/API contract exist in
+  // this environment yet. See cleanverseTrust.service.ts: unset means the
+  // adapter reports NOT_CONNECTED honestly rather than faking a result.
+  cleanverseApiUrl: process.env.CLEANVERSE_API_URL || '',
+  cleanverseApiKey: process.env.CLEANVERSE_API_KEY || '',
   isProduction: process.env.NODE_ENV === 'production',
 };

@@ -2,6 +2,15 @@ export type PaymentStatus = 'PAID' | 'PARTIAL' | 'UNPAID';
 export type PaymentMethod = 'CASH' | 'TRANSFER' | 'CARD' | 'CREDIT';
 export type ChainStatus = 'PENDING' | 'CONFIRMED' | 'FAILED';
 
+export type CleanverseConnectionState = 'NOT_CONNECTED' | 'PENDING_CONFIGURATION' | 'CONNECTED';
+
+export interface CleanverseTrustResult {
+  state: CleanverseConnectionState;
+  message: string;
+  proofId?: string;
+  proofUrl?: string;
+}
+
 export interface SaleItem {
   id: string;
   productId: string;
@@ -19,6 +28,7 @@ export interface Invoice {
   documentHash: string;
   txHash: string | null;
   chainStatus: ChainStatus;
+  cleanverseTrust?: CleanverseTrustResult | null;
 }
 
 export interface Receipt {
@@ -29,6 +39,7 @@ export interface Receipt {
   documentHash: string;
   txHash: string | null;
   chainStatus: ChainStatus;
+  cleanverseTrust?: CleanverseTrustResult | null;
 }
 
 export interface Sale {
@@ -70,9 +81,11 @@ export interface VerificationResult {
   documentType: 'INVOICE' | 'RECEIPT';
   documentNumber: string;
   businessName: string;
+  currency: string;
   totalAmount: number;
   issuedAt: string;
   documentHash: string;
   chainStatus: ChainStatus;
   txHash: string | null;
+  cleanverseTrust: CleanverseTrustResult;
 }
