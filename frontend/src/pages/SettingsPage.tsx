@@ -203,7 +203,7 @@ export default function SettingsPage() {
               <Card className="border-destructive/20">
                 <CardHeader>
                   <CardTitle className="text-base">Session</CardTitle>
-                  <CardDescription>Sign out of BizPilot AI on this device</CardDescription>
+                  <CardDescription>Sign out of BizPilot on this device</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button variant="destructive" onClick={logout}>

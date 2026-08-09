@@ -34,7 +34,7 @@ interface NavItem {
 // Main nav group — Home through AI Assistant.
 const MAIN_NAV_ITEMS: NavItem[] = [
   { label: 'Home', icon: HomeIcon, path: '/home' },
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+  { label: 'Mission Control', icon: LayoutDashboard, path: '/dashboard' },
   { label: 'Customers', icon: Users, path: '/customers' },
   { label: 'Inventory', icon: Package, path: '/inventory' },
   { label: 'Sales', icon: ShoppingCart, path: '/sales' },
@@ -159,7 +159,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20">
                   <Rocket className="h-4 w-4" />
                 </div>
-                <span className="font-display text-lg font-bold tracking-tight">BizPilot AI</span>
+                <span className="font-display text-lg font-bold tracking-tight">BizPilot</span>
               </Link>
               <Button variant="ghost" size="icon" onClick={() => setMobileNavOpen(false)}>
                 <X className="h-4 w-4" />
