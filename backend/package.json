@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "description": "BizPilot AI - Backend API",
   "main": "dist/server.js",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "nodemon --watch src --ext ts,json --exec \"node --dns-result-order=ipv4first -r ts-node/register\" src/server.ts",
+    "postinstall": "prisma generate",
     "build": "tsc",
     "start": "prisma migrate deploy && node dist/server.js",
     "prisma:generate": "prisma generate",
