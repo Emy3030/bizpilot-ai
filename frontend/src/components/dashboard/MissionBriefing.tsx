@@ -1,8 +1,8 @@
 import { Sparkles, AlertTriangle, Clock, Users, ShoppingBag } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { MissionControlSummary, HealthLabel } from '@/types/dashboard';
+import { HealthScorePill } from '@/components/ui/health-score';
+import { MissionControlSummary } from '@/types/dashboard';
 import { formatCurrency } from '@/utils/formatCurrency';
-import { cn } from '@/utils/cn';
 
 const PRIORITY_ICON = {
   approvals: Clock,
@@ -11,14 +11,18 @@ const PRIORITY_ICON = {
   no_sales: ShoppingBag,
 } as const;
 
-const HEALTH_STYLES: Record<HealthLabel, string> = {
-  Strong: 'border-success/30 bg-success/10 text-success',
-  Steady: 'border-primary/30 bg-primary/10 text-primary',
-  'Needs attention': 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  'At risk': 'border-destructive/30 bg-destructive/10 text-destructive',
-};
+function getTimeOfDayGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
-function buildBriefingText(summary: MissionControlSummary, currency: string): string {
+function buildBriefingText(summary: MissionControlSummary, currency: string, hasInsufficientData: boolean): string {
+  if (hasInsufficientData) {
+    return "Welcome to BizPilot. Once you add products, customers, and record a sale, I'll start tracking your business health and watching for anything that needs your attention.";
+  }
+
   const { todayStats, pendingApprovalsCount } = summary;
   const parts: string[] = [];
 
@@ -42,7 +46,17 @@ function buildBriefingText(summary: MissionControlSummary, currency: string): st
   return parts.join(' ');
 }
 
-export function MissionBriefing({ summary, currency }: { summary: MissionControlSummary; currency: string }) {
+export function MissionBriefing({
+  summary,
+  currency,
+  userName,
+}: {
+  summary: MissionControlSummary;
+  currency: string;
+  userName?: string;
+}) {
+  const hasInsufficientData = summary.recentTransactions.length === 0;
+
   return (
     <Card className="border-primary/20 bg-gradient-to-br from-primary/[0.06] to-transparent">
       <CardContent className="p-6">
@@ -52,23 +66,25 @@ export function MissionBriefing({ summary, currency }: { summary: MissionControl
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
-              <p className="font-display text-sm font-semibold">Morning Briefing</p>
+              <p className="font-display text-sm font-semibold">
+                {getTimeOfDayGreeting()}
+                {userName ? `, ${userName}` : ''}.
+              </p>
               <p className="mt-1 max-w-2xl text-sm leading-relaxed text-foreground/90">
-                {buildBriefingText(summary, currency)}
+                {buildBriefingText(summary, currency, hasInsufficientData)}
               </p>
             </div>
           </div>
-          <div
-            className={cn(
-              'flex shrink-0 items-center gap-2 self-start rounded-full border px-3 py-1.5 text-xs font-medium',
-              HEALTH_STYLES[summary.healthLabel]
-            )}
-          >
-            Business Health: {summary.healthLabel} ({summary.healthScore})
-          </div>
+          <HealthScorePill
+            label="Business Health"
+            score={summary.healthScore}
+            status={summary.healthLabel}
+            insufficientData={hasInsufficientData}
+            className="self-start"
+          />
         </div>
 
-        {summary.priorities.length > 0 && (
+        {!hasInsufficientData && summary.priorities.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2 border-t border-border/60 pt-4">
             {summary.priorities.map((priority) => {
               const Icon = PRIORITY_ICON[priority.type];

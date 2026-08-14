@@ -46,7 +46,7 @@ export const agentService = {
     const salesActions = recentActions.filter((a) => a.type === 'RECORD_SALE');
     const customerActions = recentActions.filter((a) => a.type === 'CREATE_CUSTOMER');
     const executedActions = recentActions.filter((a) => a.status === 'EXECUTED');
-    const { todayStats, lowStockCount, topDebtors, pendingApprovalsCount } = missionControl;
+    const { todayStats, lowStockCount, topDebtors, debtorCount, pendingApprovalsCount } = missionControl;
 
     const agents: AgentSummary[] = [
       {
@@ -126,8 +126,8 @@ export const agentService = {
         role: 'Retention & risk',
         responsibility: 'Watches for customers going quiet or debt building up.',
         status:
-          topDebtors.length > 0
-            ? `${topDebtors.length} customer${topDebtors.length === 1 ? '' : 's'} with outstanding balances`
+          debtorCount > 0
+            ? `${debtorCount} customer${debtorCount === 1 ? '' : 's'} with outstanding balances`
             : 'No customers at risk',
         recentActivity: customerActions.slice(0, 3).map((a) => a.summary),
         recommendation: topDebtors[0] ? `Follow up with ${topDebtors[0].name} — outstanding balance on file.` : null,

@@ -12,6 +12,10 @@ export interface Expense {
   categoryId: string | null;
   category: { id: string; name: string } | null;
   createdAt: string;
+  /** More than 2x this category's own average spend, with enough history
+   *  in the category to make that average meaningful. Absent on freshly
+   *  created/updated expenses returned outside the list endpoint. */
+  isUnusual?: boolean;
 }
 
 export interface ExpenseInput {

@@ -64,7 +64,7 @@ export const expenseService = {
         : {}),
     };
 
-    const [expenses, total, sumAgg] = await Promise.all([
+    const [expenses, total, sumAgg, categoryAverages] = await Promise.all([
       prisma.expense.findMany({
         where,
         orderBy: { createdAt: 'desc' },
@@ -74,10 +74,29 @@ export const expenseService = {
       }),
       prisma.expense.count({ where }),
       prisma.expense.aggregate({ where, _sum: { amount: true } }),
+      // One aggregate query for the whole page, not one per row — avoids an
+      // N+1 against a Postgres project with a hard connection-count cap.
+      prisma.expense.groupBy({
+        by: ['categoryId'],
+        where: { userId, categoryId: { not: null } },
+        _avg: { amount: true },
+        _count: true,
+      }),
     ]);
 
+    // "Unusual" is a simple, explainable heuristic — not fabricated:
+    // an expense the AI flags as unusual is one that's genuinely more than
+    // double that category's own average spend, with at least 3 prior
+    // expenses in the category to make the average meaningful.
+    const avgByCategory = new Map(categoryAverages.map((c) => [c.categoryId, { avg: Number(c._avg.amount || 0), count: c._count }]));
+    const expensesWithFlags = expenses.map((e) => {
+      const stats = e.categoryId ? avgByCategory.get(e.categoryId) : undefined;
+      const isUnusual = !!stats && stats.count >= 3 && Number(e.amount) > stats.avg * 2;
+      return { ...e, isUnusual };
+    });
+
     return {
-      expenses,
+      expenses: expensesWithFlags,
       meta: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
       totalAmount: Number(sumAgg._sum.amount || 0),
     };

@@ -30,7 +30,7 @@ export default function LoginPage() {
     try {
       await login(values);
       toast.success('Welcome back!');
-      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/dashboard';
+      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/mission-control';
       navigate(from, { replace: true });
     } catch (error) {
       toast.error(getErrorMessage(error));

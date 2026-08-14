@@ -32,6 +32,7 @@ import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { formatRelativeTime } from '@/utils/formatRelativeTime';
 import { getAssetUrl } from '@/utils/getAssetUrl';
+import { getInitials } from '@/utils/getInitials';
 import { CustomerRiskLevel } from '@/types/customer';
 
 const RISK_BADGE: Record<CustomerRiskLevel, 'success' | 'warning' | 'destructive'> = {
@@ -87,7 +88,11 @@ export default function CustomerDetailPage() {
 
         <FadeInSection>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-base font-semibold text-primary">
+                {getInitials(customer.name)}
+              </div>
+              <div>
               <h1 className="font-display text-2xl font-bold tracking-tight">{customer.name}</h1>
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                 {customer.phone && (
@@ -105,6 +110,7 @@ export default function CustomerDetailPage() {
                     <MapPin className="h-3.5 w-3.5" /> {customer.address}
                   </span>
                 )}
+              </div>
               </div>
             </div>
             <Button variant="outline" onClick={() => setEditOpen(true)}>

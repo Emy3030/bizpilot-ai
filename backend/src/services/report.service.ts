@@ -63,8 +63,12 @@ export const reportService = {
     const { start, end } = getRange(period, referenceDate);
     const { start: prevStart, end: prevEnd } = getRange(period, getPreviousReferenceDate(period, referenceDate));
 
-    const [salesAgg, expenseAgg, prevSalesAgg, prevExpenseAgg, salesForTrend, expensesForTrend, bestSellersRaw] =
-      await Promise.all([
+    // Split across two sequential batches instead of one 7-way Promise.all —
+    // Supabase's free-tier pooler enforces a hard, shared, project-wide cap
+    // (confirmed live: "max clients reached in session mode - pool_size: 15"),
+    // not something a larger Prisma connection_limit can work around. Keeping
+    // peak concurrent demand from any single request low is the actual fix.
+    const [salesAgg, expenseAgg, salesForTrend, expensesForTrend] = await Promise.all([
       prisma.sale.aggregate({
         where: { userId, createdAt: { gte: start, lte: end } },
         _sum: { totalAmount: true, profit: true },
@@ -74,14 +78,6 @@ export const reportService = {
         where: { userId, createdAt: { gte: start, lte: end } },
         _sum: { amount: true },
       }),
-      prisma.sale.aggregate({
-        where: { userId, createdAt: { gte: prevStart, lte: prevEnd } },
-        _sum: { totalAmount: true, profit: true },
-      }),
-      prisma.expense.aggregate({
-        where: { userId, createdAt: { gte: prevStart, lte: prevEnd } },
-        _sum: { amount: true },
-      }),
       prisma.sale.findMany({
         where: { userId, createdAt: { gte: start, lte: end } },
         select: { createdAt: true, totalAmount: true, profit: true },
@@ -89,6 +85,17 @@ export const reportService = {
       prisma.expense.findMany({
         where: { userId, createdAt: { gte: start, lte: end } },
         select: { createdAt: true, amount: true },
+      }),
+    ]);
+
+    const [prevSalesAgg, prevExpenseAgg, bestSellersRaw] = await Promise.all([
+      prisma.sale.aggregate({
+        where: { userId, createdAt: { gte: prevStart, lte: prevEnd } },
+        _sum: { totalAmount: true, profit: true },
+      }),
+      prisma.expense.aggregate({
+        where: { userId, createdAt: { gte: prevStart, lte: prevEnd } },
+        _sum: { amount: true },
       }),
       prisma.saleItem.groupBy({
         by: ['productId'],

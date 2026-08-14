@@ -14,6 +14,7 @@ import newsRoutes from './news.routes';
 import currencyRoutes from './currency.routes';
 import agentActionRoutes from './agentAction.routes';
 import agentRoutes from './agent.routes';
+import invoiceRoutes from './invoice.routes';
 
 const router = Router();
 
@@ -36,5 +37,6 @@ router.use('/news', newsRoutes);
 router.use('/currency', currencyRoutes);
 router.use('/agent-actions', agentActionRoutes);
 router.use('/agents', agentRoutes);
+router.use('/invoices', invoiceRoutes);
 
 export default router;

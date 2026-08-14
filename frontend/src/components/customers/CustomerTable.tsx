@@ -13,6 +13,7 @@ import { Customer, PaginationMeta } from '@/types/customer';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { useDeleteCustomer } from '@/hooks/useCustomers';
 import { getErrorMessage } from '@/utils/getErrorMessage';
+import { getInitials } from '@/utils/getInitials';
 
 interface Props {
   customers: Customer[];
@@ -74,8 +75,11 @@ export function CustomerTable({ customers, meta, isLoading, currency, onEdit, on
                     return (
                       <tr key={c.id} className="border-b border-border/60 last:border-0">
                         <td className="px-6 py-4 font-medium">
-                          <Link to={`/customers/${c.id}`} className="hover:text-primary hover:underline">
-                            {c.name}
+                          <Link to={`/customers/${c.id}`} className="flex items-center gap-3 hover:text-primary">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                              {getInitials(c.name)}
+                            </div>
+                            <span className="hover:underline">{c.name}</span>
                           </Link>
                         </td>
                         <td className="px-6 py-4 text-muted-foreground">

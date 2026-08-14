@@ -42,7 +42,7 @@ Small businesses lose money to poor record keeping, fake receipts, inventory the
 | Blockchain | Base Sepolia testnet, Solidity, ethers.js |
 | AI | Google Gemini API |
 | PDF / QR | pdfkit, qrcode |
-| Deploy targets | Frontend to Vercel, Backend to Render, Database on Neon |
+| Deploy targets | Frontend to Vercel, Backend to Render, Database on Supabase |
 
 ---
 
@@ -202,7 +202,7 @@ From then on, every invoice/receipt generated calls anchorDocument(hash) on the 
 |---|---|---|
 | Frontend | Vercel | Set VITE_API_URL to your deployed backend's URL |
 | Backend | Render | Set all backend/.env variables in the Render dashboard; run npx prisma migrate deploy as part of your build/release step |
-| Database | Neon | Free tier is enough for a demo; use the pooled connection string for DATABASE_URL |
+| Database | Supabase | Free tier is enough for a demo; use the pooled connection string for DATABASE_URL. Supabase's free tier caps shared pooler connections project-wide (currently 15) — keep DATABASE_URL's `connection_limit` modest (e.g. 5-7) so one app instance doesn't exhaust it |
 
 Read the limitations section below before deploying - the current image/PDF/QR storage approach uses local disk, which doesn't survive Render's ephemeral filesystem across deploys.
 

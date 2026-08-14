@@ -29,12 +29,28 @@ export interface RecentTransaction {
   createdAt: string;
 }
 
+export interface CashFlowTrendPoint {
+  date: string;
+  inflow: number;
+  outflow: number;
+  net: number;
+}
+
+export interface CashFlow {
+  inflow: number;
+  outflow: number;
+  net: number;
+  trend: CashFlowTrendPoint[];
+}
+
 export interface DashboardSummary {
   todayStats: TodayStats;
   lowStock: LowStockProduct[];
   lowStockCount: number;
+  totalProducts: number;
   totalCustomers: number;
   weeklyTrend: WeeklyTrendPoint[];
+  cashFlow: CashFlow;
   recentTransactions: RecentTransaction[];
 }
 
@@ -59,11 +75,36 @@ export interface TopDebtor {
   outstandingDebt: number;
 }
 
+export interface HealthBreakdownEntry {
+  score: number;
+  label: HealthLabel;
+}
+
+export interface BusinessHealthBreakdown {
+  revenue: HealthBreakdownEntry;
+  cashFlow: HealthBreakdownEntry;
+  operations: HealthBreakdownEntry;
+  customers: HealthBreakdownEntry;
+  inventory: HealthBreakdownEntry;
+}
+
+export interface RecentInvoice {
+  id: string;
+  invoiceNumber: string;
+  chainStatus: 'PENDING' | 'CONFIRMED' | 'FAILED';
+  createdAt: string;
+  customerName: string;
+  totalAmount: number;
+}
+
 export interface MissionControlSummary extends DashboardSummary {
   healthScore: number;
   healthLabel: HealthLabel;
+  businessHealth: BusinessHealthBreakdown;
   priorities: Priority[];
   pendingApprovalsCount: number;
+  debtorCount: number;
   recentAgentActivity: AgentActivityItem[];
   topDebtors: TopDebtor[];
+  recentInvoices: RecentInvoice[];
 }

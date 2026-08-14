@@ -11,6 +11,7 @@ import { FadeInSection } from '@/components/motion/FadeInSection';
 import { NewSaleDialog } from '@/components/sales/NewSaleDialog';
 import { SaleDetailDialog } from '@/components/sales/SaleDetailDialog';
 import { SalesTable } from '@/components/sales/SalesTable';
+import { SalesAgentBanner } from '@/components/sales/SalesAgentBanner';
 import { useSales } from '@/hooks/useSales';
 import { useAuth } from '@/context/AuthContext';
 import { PaymentStatus } from '@/types/sale';
@@ -60,7 +61,11 @@ export default function SalesPage() {
           }
         />
 
-        <FadeInSection delay={0.05} className="mb-4 flex flex-wrap gap-2">
+        <FadeInSection delay={0.05} className="mb-4">
+          <SalesAgentBanner />
+        </FadeInSection>
+
+        <FadeInSection delay={0.08} className="mb-4 flex flex-wrap gap-2">
           {STATUS_FILTERS.map((f) => (
             <button
               key={f.label}

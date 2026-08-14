@@ -34,7 +34,7 @@ export default function RegisterPage() {
         password: values.password,
       });
       toast.success('Account created — welcome to BizPilot!');
-      navigate('/dashboard', { replace: true });
+      navigate('/mission-control', { replace: true });
     } catch (error) {
       toast.error(getErrorMessage(error));
     }

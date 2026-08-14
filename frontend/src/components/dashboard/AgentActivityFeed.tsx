@@ -1,9 +1,10 @@
-import { Bot, CheckCircle2, XCircle, AlertOctagon } from 'lucide-react';
+import { Bot, CheckCircle2, XCircle, AlertOctagon, Clock } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatRelativeTime } from '@/utils/formatRelativeTime';
 
 const STATUS_META: Record<string, { icon: typeof CheckCircle2; className: string; label: string }> = {
+  PENDING: { icon: Clock, className: 'text-amber-600 dark:text-amber-400', label: 'Awaiting approval' },
   EXECUTED: { icon: CheckCircle2, className: 'text-success', label: 'Approved' },
   REJECTED: { icon: XCircle, className: 'text-muted-foreground', label: 'Rejected' },
   FAILED: { icon: AlertOctagon, className: 'text-destructive', label: 'Failed' },

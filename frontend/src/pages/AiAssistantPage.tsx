@@ -12,18 +12,27 @@ import { SuggestedPrompts } from '@/components/ai/SuggestedPrompts';
 import { TypingIndicator } from '@/components/ai/TypingIndicator';
 import { PendingApprovals } from '@/components/ai/PendingApprovals';
 import { AgentsOverview } from '@/components/ai/AgentsOverview';
+import { BusinessContextBar } from '@/components/ai/BusinessContextBar';
 import { AgentActivityFeed } from '@/components/dashboard/AgentActivityFeed';
 import { PageTransition } from '@/components/motion/PageTransition';
 import { FadeInSection } from '@/components/motion/FadeInSection';
 import { useAiChatHistory, useSendAiMessage, useClearAiChat } from '@/hooks/useAiChat';
 import { useRecentAgentActivity } from '@/hooks/useAgentActions';
+import { useMissionControl } from '@/hooks/useDashboardSummary';
+import { useAgents } from '@/hooks/useAgents';
+import { useAuth } from '@/context/AuthContext';
 import { getErrorMessage } from '@/utils/getErrorMessage';
 
 export default function AiAssistantPage() {
+  const { user } = useAuth();
+  const currency = user?.currency || 'NGN';
   const { data: messages, isLoading } = useAiChatHistory();
   const { data: recentActivity } = useRecentAgentActivity();
+  const { data: missionControl } = useMissionControl();
+  const { data: agents } = useAgents();
   const sendMessage = useSendAiMessage();
   const clearChat = useClearAiChat();
+  const recommendationsCount = agents?.filter((a) => !!a.recommendation).length ?? 0;
 
   const [input, setInput] = useState('');
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
@@ -74,6 +83,12 @@ export default function AiAssistantPage() {
         )}
       </div>
 
+      {missionControl && (
+        <div className="mb-6">
+          <BusinessContextBar summary={missionControl} currency={currency} recommendationsCount={recommendationsCount} />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
       <Card className="flex h-[70vh] flex-col">
         <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-6">
@@ -90,7 +105,11 @@ export default function AiAssistantPage() {
                 <p className="font-medium">Here's what I'm watching — ask me what changed, or what needs attention.</p>
                 <p className="text-sm text-muted-foreground">Try one of these to get started:</p>
               </div>
-              <SuggestedPrompts onSelect={handleSend} />
+              <SuggestedPrompts
+                onSelect={handleSend}
+                pendingApprovalsCount={missionControl?.pendingApprovalsCount}
+                lowStockCount={missionControl?.lowStockCount}
+              />
             </div>
           ) : (
             <>
@@ -112,7 +131,11 @@ export default function AiAssistantPage() {
         <CardContent className="border-t border-border p-4">
           {!!messages?.length && (
             <div className="mb-3">
-              <SuggestedPrompts onSelect={handleSend} />
+              <SuggestedPrompts
+                onSelect={handleSend}
+                pendingApprovalsCount={missionControl?.pendingApprovalsCount}
+                lowStockCount={missionControl?.lowStockCount}
+              />
             </div>
           )}
           <form
@@ -123,12 +146,13 @@ export default function AiAssistantPage() {
             className="flex gap-2"
           >
             <Input
+              aria-label="Message the AI COO"
               placeholder="Ask about sales, stock, or request marketing copy..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={sendMessage.isPending}
             />
-            <Button type="submit" isLoading={sendMessage.isPending} disabled={!input.trim()}>
+            <Button type="submit" isLoading={sendMessage.isPending} disabled={!input.trim()} aria-label="Send message">
               <Send className="h-4 w-4" />
             </Button>
           </form>
@@ -137,10 +161,10 @@ export default function AiAssistantPage() {
 
       <div className="space-y-6">
         <FadeInSection>
-          <PendingApprovals />
+          <AgentsOverview />
         </FadeInSection>
         <FadeInSection delay={0.05}>
-          <AgentsOverview />
+          <PendingApprovals />
         </FadeInSection>
         <FadeInSection delay={0.1}>
           <AgentActivityFeed items={recentActivity ?? []} />

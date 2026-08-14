@@ -2,14 +2,16 @@ import { useMemo, useRef, useState, type ElementType, type KeyboardEvent } from 
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
-  Home as HomeIcon,
   LayoutDashboard,
   Users,
   Package,
   ShoppingCart,
   Receipt,
+  FileText,
   BarChart3,
   Sparkles,
+  CheckCircle2,
+  Activity as ActivityIcon,
   Settings as SettingsIcon,
   PlusCircle,
   UserPlus,
@@ -26,14 +28,16 @@ interface SearchItem {
 }
 
 const SEARCH_INDEX: SearchItem[] = [
-  { label: 'Home', description: 'Business feed & overview', path: '/home', icon: HomeIcon },
-  { label: 'Dashboard', description: "Today's business snapshot", path: '/dashboard', icon: LayoutDashboard },
+  { label: 'Mission Control', description: "Today's business snapshot", path: '/mission-control', icon: LayoutDashboard },
   { label: 'Customers', description: 'Manage your customers', path: '/customers', icon: Users },
   { label: 'Inventory', description: 'Products & stock levels', path: '/inventory', icon: Package },
   { label: 'Sales', description: 'Record and review sales', path: '/sales', icon: ShoppingCart },
+  { label: 'Invoices', description: 'Generated invoices & trust status', path: '/invoices', icon: FileText },
   { label: 'Expenses', description: 'Track business expenses', path: '/expenses', icon: Receipt },
   { label: 'Reports', description: 'Revenue, profit & best sellers', path: '/reports', icon: BarChart3 },
-  { label: 'AI Assistant', description: 'Ask about your business', path: '/ai-assistant', icon: Sparkles },
+  { label: 'AI COO Workspace', description: 'Ask about your business', path: '/ai-assistant', icon: Sparkles },
+  { label: 'Approvals', description: 'Review pending agent actions', path: '/approvals', icon: CheckCircle2 },
+  { label: 'Activity', description: 'Full agent action history', path: '/activity', icon: ActivityIcon },
   { label: 'Settings', description: 'Profile, security & preferences', path: '/settings', icon: SettingsIcon },
   { label: 'New sale', description: 'Record a sale', path: '/sales?new=1', icon: PlusCircle },
   { label: 'Add customer', description: 'Add a new customer', path: '/customers?new=1', icon: UserPlus },

@@ -7,11 +7,41 @@ let client: GoogleGenerativeAI | null = null;
 // Google; gemini-3.5-flash is the current GA stable Flash model.
 const MODEL_NAME = 'gemini-3.5-flash';
 const MAX_TOOL_ROUNDS = 6;
+const MAX_NETWORK_RETRIES = 2;
+const NETWORK_RETRY_DELAY_MS = 1500;
 
 function getClient(): GoogleGenerativeAI | null {
   if (!env.geminiApiKey) return null;
   if (!client) client = new GoogleGenerativeAI(env.geminiApiKey);
   return client;
+}
+
+// Distinguishes a transient network blip (Node's fetch itself failing to
+// reach Google — confirmed transient in practice, retrying moments later
+// succeeds) from a genuine API-level rejection (bad key, quota, safety
+// block) that a retry can't fix and shouldn't waste a call on.
+function isTransientNetworkError(error: unknown): boolean {
+  return error instanceof TypeError && /fetch failed/i.test(error.message);
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withNetworkRetry<T>(fn: () => Promise<T>): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= MAX_NETWORK_RETRIES; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (!isTransientNetworkError(error) || attempt === MAX_NETWORK_RETRIES) throw error;
+      // eslint-disable-next-line no-console
+      console.warn(`[Gemini] transient network error, retrying (${attempt + 1}/${MAX_NETWORK_RETRIES})...`);
+      await sleep(NETWORK_RETRY_DELAY_MS);
+    }
+  }
+  throw lastError;
 }
 
 export interface ToolCallRequest {
@@ -39,7 +69,7 @@ export const geminiService = {
 
     try {
       const model = genAI.getGenerativeModel({ model: MODEL_NAME, systemInstruction: systemPrompt });
-      const result = await model.generateContent(userMessage);
+      const result = await withNetworkRetry(() => model.generateContent(userMessage));
       const text = result.response.text().trim();
       return text || "I couldn't generate a response for that. Could you try rephrasing your question?";
     } catch (error) {
@@ -80,13 +110,13 @@ export const geminiService = {
       });
 
       const chat = model.startChat({ history: [] as Content[] });
-      let result = await chat.sendMessage(userMessage);
+      let result = await withNetworkRetry(() => chat.sendMessage(userMessage));
 
       for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
         const calls = result.response.functionCalls();
         if (!calls || calls.length === 0) break;
 
-        const responseParts = [];
+        const responseParts: { functionResponse: { name: string; response: object } }[] = [];
         for (const call of calls) {
           const args = (call.args || {}) as Record<string, unknown>;
           const toolResult = await executeTool({ name: call.name, args });
@@ -96,7 +126,7 @@ export const geminiService = {
           });
         }
 
-        result = await chat.sendMessage(responseParts);
+        result = await withNetworkRetry(() => chat.sendMessage(responseParts));
       }
 
       const text = result.response.text().trim();

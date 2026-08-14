@@ -14,7 +14,7 @@ import { StaggerContainer, StaggerItem } from '@/components/motion/StaggerContai
 import { useAgents } from '@/hooks/useAgents';
 import { cn } from '@/utils/cn';
 
-const AGENT_ICON: Record<string, typeof Crown> = {
+export const AGENT_ICON: Record<string, typeof Crown> = {
   coo: Crown,
   finance: LineChart,
   sales: ShoppingCart,

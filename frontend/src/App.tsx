@@ -6,7 +6,9 @@ import { Loader2 } from 'lucide-react';
 
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { CoPilotProvider } from '@/context/CoPilotContext';
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/ProtectedRoute';
+import { CoPilotPanel } from '@/components/ai/CoPilotPanel';
 
 // Route-level code splitting — each page becomes its own chunk, loaded on
 // demand instead of all bundled into one main.js. Keeps the first paint
@@ -16,13 +18,15 @@ const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
 const VerifyPage = lazy(() => import('@/pages/VerifyPage'));
-const HomePage = lazy(() => import('@/pages/HomePage'));
-const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
+const MissionControlPage = lazy(() => import('@/pages/MissionControlPage'));
 const CustomersPage = lazy(() => import('@/pages/CustomersPage'));
 const CustomerDetailPage = lazy(() => import('@/pages/CustomerDetailPage'));
 const InventoryPage = lazy(() => import('@/pages/InventoryPage'));
 const SalesPage = lazy(() => import('@/pages/SalesPage'));
 const ExpensesPage = lazy(() => import('@/pages/ExpensesPage'));
+const InvoicesPage = lazy(() => import('@/pages/InvoicesPage'));
+const ApprovalsPage = lazy(() => import('@/pages/ApprovalsPage'));
+const ActivityPage = lazy(() => import('@/pages/ActivityPage'));
 const ReportsPage = lazy(() => import('@/pages/ReportsPage'));
 const AiAssistantPage = lazy(() => import('@/pages/AiAssistantPage'));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
@@ -51,6 +55,7 @@ export default function App() {
       <ThemeProvider>
         <BrowserRouter>
           <AuthProvider>
+            <CoPilotProvider>
             <Toaster richColors position="top-right" />
             <Suspense fallback={<RouteFallback />}>
               <Routes>
@@ -83,19 +88,17 @@ export default function App() {
                 {/* Public — reached by scanning a receipt QR code, no login required */}
                 <Route path="/verify/:hash" element={<VerifyPage />} />
 
+                {/* Compatibility redirects — Mission Control absorbed Home's
+                    intelligence feed and is now the single authenticated
+                    entry point; old links/bookmarks to either still land
+                    somewhere real. */}
+                <Route path="/home" element={<Navigate to="/mission-control" replace />} />
+                <Route path="/dashboard" element={<Navigate to="/mission-control" replace />} />
                 <Route
-                  path="/home"
+                  path="/mission-control"
                   element={
                     <ProtectedRoute>
-                      <HomePage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <DashboardPage />
+                      <MissionControlPage />
                     </ProtectedRoute>
                   }
                 />
@@ -140,6 +143,30 @@ export default function App() {
                   }
                 />
                 <Route
+                  path="/invoices"
+                  element={
+                    <ProtectedRoute>
+                      <InvoicesPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/approvals"
+                  element={
+                    <ProtectedRoute>
+                      <ApprovalsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/activity"
+                  element={
+                    <ProtectedRoute>
+                      <ActivityPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/reports"
                   element={
                     <ProtectedRoute>
@@ -164,9 +191,11 @@ export default function App() {
                   }
                 />
 
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                <Route path="*" element={<Navigate to="/mission-control" replace />} />
               </Routes>
             </Suspense>
+            <CoPilotPanel />
+            </CoPilotProvider>
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>

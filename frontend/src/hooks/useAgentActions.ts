@@ -22,6 +22,14 @@ export function usePendingAgentActions() {
   });
 }
 
+export function useAgentActionHistory() {
+  return useQuery({
+    queryKey: ['agent-actions', 'all'],
+    queryFn: () => agentActionApi.list(),
+    refetchInterval: 20_000,
+  });
+}
+
 export function useRecentAgentActivity(limit = 5) {
   return useQuery({
     queryKey: ['agent-actions', 'recent'],

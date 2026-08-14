@@ -11,8 +11,10 @@ module.exports = {
   },
   networks: {
     baseSepolia: {
-      // Swapping to Ankr's main endpoint bypasses the 526 SSL handshake failure
-      url: 'https://ankr.com',
+      // Public Base Sepolia RPC — live-verified reachable. The previous
+      // 'https://ankr.com' value was Ankr's marketing homepage, not an RPC
+      // endpoint; it could never have connected.
+      url: process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org',
       accounts: process.env.BLOCKCHAIN_PRIVATE_KEY ? [process.env.BLOCKCHAIN_PRIVATE_KEY] : [],
       chainId: 84532,
     },

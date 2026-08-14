@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Trash2, Wallet, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, Trash2, Wallet, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -72,7 +72,17 @@ export function ExpenseTable({ expenses, meta, isLoading, currency, onEdit, onPa
                   {expenses.map((e) => (
                     <tr key={e.id} className="border-b border-border/60 last:border-0">
                       <td className="px-6 py-3">
-                        <p className="font-medium">{e.title}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{e.title}</p>
+                          {e.isUnusual && (
+                            <span
+                              className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400"
+                              title="More than double this category's usual spend"
+                            >
+                              <TrendingUp className="h-3 w-3" /> Unusual
+                            </span>
+                          )}
+                        </div>
                         {e.note && <p className="truncate text-xs text-muted-foreground">{e.note}</p>}
                       </td>
                       <td className="px-6 py-3">
